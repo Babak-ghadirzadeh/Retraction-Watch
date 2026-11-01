@@ -1,0 +1,6 @@
+{
+  "name": "RetractScan: Journal Editorial Citation & Retraction Audit",
+  "description": "Academic journal editorial audit platform to discover secondary research, detect retracted citations using Crossref, PubMed, and OpenAlex, and export editorial risk assessments.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,6 @@
+{
+  "summary":  "Architectural implementation plan for RetractScan: an academic journal editorial audit system that searches journals via Crossref/OpenAlex/PubMed, filters review and secondary studies using metadata and Gemini AI classification, extracts citations, checks Crossref and OpenAlex for retracted cited works, flags them interactively, and provides an editorial dashboard with PDF/CSV export and individual DOI/PMID audit tools.",
+  "updatedAt":  "2026-11-01T04:56:40.385716809Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}
