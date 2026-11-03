@@ -11,8 +11,16 @@ import {
   Briefcase,
   AlertCircle,
   ExternalLink,
+  Award,
+  Sparkles,
 } from 'lucide-react';
 import { EditorProfile } from '../types/academic';
+import {
+  launchGoogleAuth,
+  launchOrcidAuth,
+  VERIFIED_EDITORIAL_ACCOUNTS,
+  OAuthUserData,
+} from '../utils/oauthClient';
 
 interface EditorialLoginPageProps {
   onLogin: (profile: EditorProfile) => void;
@@ -42,11 +50,22 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  const [showDirectPicker, setShowDirectPicker] = useState(false);
+
   // Listen for OAuth popup completion (Google & ORCID)
   useEffect(() => {
     const handleOAuthMessage = (event: MessageEvent) => {
       const origin = event.origin;
-      if (!origin.endsWith('.run.app') && !origin.includes('localhost') && !origin.includes('127.0.0.1')) {
+      // Allow preview origin, null (from about:blank popup), localhost, or same-origin
+      const isAllowedOrigin =
+        !origin ||
+        origin === 'null' ||
+        origin === window.location.origin ||
+        origin.endsWith('.run.app') ||
+        origin.includes('localhost') ||
+        origin.includes('127.0.0.1');
+
+      if (!isAllowedOrigin) {
         return;
       }
 
@@ -56,33 +75,31 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
           name: event.data.name,
           email: event.data.email,
           orcid: event.data.orcid,
+          journal: event.data.journal,
+          role: event.data.role,
+          institution: event.data.institution,
         });
       }
     };
 
     window.addEventListener('message', handleOAuthMessage);
     return () => window.removeEventListener('message', handleOAuthMessage);
-  }, []);
+  }, [mode]);
 
   // Complete OAuth login session
   const completeOAuthSession = async (
     provider: 'google' | 'orcid',
-    details?: { name?: string; email?: string; orcid?: string }
+    details?: Partial<OAuthUserData>
   ) => {
     setIsLoading(true);
     setErrorMessage(null);
 
-    const defaultName = provider === 'orcid'
-      ? (details?.name || 'Dr. Arthur Campbell')
-      : (details?.name || 'Babak Ghadirzadeh');
-
-    const defaultEmail = provider === 'orcid'
-      ? (details?.email || 'a.campbell@lancet-editorial.org')
-      : (details?.email || 'ghadirzadeh.babak@gmail.com');
-
-    const defaultOrcid = provider === 'orcid'
-      ? (details?.orcid || '0000-0002-1825-0097')
-      : (details?.orcid || '0000-0001-8492-3321');
+    const defaultName = details?.name || (provider === 'orcid' ? 'Babak Ghadirzadeh, M.D.' : 'Babak Ghadirzadeh');
+    const defaultEmail = details?.email || (provider === 'orcid' ? 'ghadirzadeh.babak@gmail.com' : 'ghadirzadeh.babak@gmail.com');
+    const defaultOrcid = details?.orcid || (provider === 'orcid' ? '0000-0001-8492-3321' : '0000-0001-8492-3321');
+    const defaultJournal = details?.journal || journal || 'The Lancet';
+    const defaultRole = details?.role || role || 'Senior Integrity Editor';
+    const defaultInstitution = details?.institution || (provider === 'orcid' ? 'Kurdistan University of Medical Sciences' : 'Google Verified Editorial Identity');
 
     try {
       const res = await fetch('/api/auth/federated', {
@@ -93,26 +110,28 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
           name: defaultName,
           email: defaultEmail,
           orcid: defaultOrcid,
-          journal: 'The Lancet',
-          role: 'Senior Integrity Editor',
-          institution: provider === 'orcid' ? 'ORCID Verified Researcher' : 'Google Identity Services',
+          journal: defaultJournal,
+          role: defaultRole,
+          institution: defaultInstitution,
         }),
       });
 
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.editor) {
         saveAccountLocally(data.editor);
-        onLogin(data.editor);
+        setSuccessMessage(`Signed in as ${data.editor.name} via ${provider.toUpperCase()}`);
+        setTimeout(() => {
+          onLogin(data.editor);
+        }, 300);
       } else {
-        // Fallback profile
         const profile: EditorProfile = {
           name: defaultName,
           email: defaultEmail,
-          journal: 'The Lancet',
-          role: 'Senior Integrity Editor',
+          journal: defaultJournal,
+          role: defaultRole,
           orcid: defaultOrcid,
           authProvider: provider,
-          institution: provider === 'orcid' ? 'ORCID Verified Researcher' : 'Google Identity Services',
+          institution: defaultInstitution,
           isLoggedIn: true,
         };
         saveAccountLocally(profile);
@@ -122,11 +141,11 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
       const profile: EditorProfile = {
         name: defaultName,
         email: defaultEmail,
-        journal: 'The Lancet',
-        role: 'Senior Integrity Editor',
+        journal: defaultJournal,
+        role: defaultRole,
         orcid: defaultOrcid,
         authProvider: provider,
-        institution: provider === 'orcid' ? 'ORCID Verified Researcher' : 'Google Identity Services',
+        institution: defaultInstitution,
         isLoggedIn: true,
       };
       saveAccountLocally(profile);
@@ -146,43 +165,43 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
   });
   const [copiedCallback, setCopiedCallback] = useState<string | null>(null);
 
-  // Launch Google OAuth Popup directly to accounts.google.com
-  const handleGoogleClick = async () => {
+  // Launch Google OAuth Popup directly & synchronously (prevents popup blockers)
+  const handleGoogleClick = () => {
     setErrorMessage(null);
-    try {
-      const origin = window.location.origin;
-      const clientParam = customGoogleClientId.trim() ? `&client_id=${encodeURIComponent(customGoogleClientId.trim())}` : '';
-      const res = await fetch(`/api/auth/google/url?origin=${encodeURIComponent(origin)}${clientParam}`);
-      const data = await res.json().catch(() => ({}));
-      const popupUrl = data.url || `https://accounts.google.com/o/oauth2/v2/auth?client_id=1048451833118-retractscan-preview.apps.googleusercontent.com&redirect_uri=${encodeURIComponent(origin + '/auth/google/callback')}&response_type=code&scope=openid%20profile%20email`;
-      
-      const popup = window.open(popupUrl, 'google_oauth_popup', 'width=540,height=700,menubar=no,toolbar=no');
-      if (!popup) {
-        setErrorMessage('Popup blocked by browser. Please allow popups for this site to complete Google Sign-In.');
-      }
-    } catch (e) {
-      console.warn('Could not launch Google OAuth endpoint:', e);
-      setErrorMessage('Could not connect to Google OAuth service. Please verify network access.');
+    setSuccessMessage(null);
+
+    const result = launchGoogleAuth({
+      mode,
+      customClientId: customGoogleClientId.trim(),
+      onSuccess: (data) => completeOAuthSession('google', data),
+      onError: (err) => {
+        setErrorMessage(err);
+        setShowDirectPicker(true);
+      },
+    });
+
+    if (result.popupBlocked) {
+      setShowDirectPicker(true);
     }
   };
 
-  // Launch ORCID OAuth Popup directly to orcid.org/oauth/authorize
-  const handleOrcidClick = async () => {
+  // Launch ORCID OAuth Popup directly & synchronously
+  const handleOrcidClick = () => {
     setErrorMessage(null);
-    try {
-      const origin = window.location.origin;
-      const clientParam = customOrcidClientId.trim() ? `&client_id=${encodeURIComponent(customOrcidClientId.trim())}` : '';
-      const res = await fetch(`/api/auth/orcid/url?origin=${encodeURIComponent(origin)}${clientParam}`);
-      const data = await res.json().catch(() => ({}));
-      const popupUrl = data.url || `https://orcid.org/oauth/authorize?client_id=APP-8A97J1Z689X1W39S&response_type=code&scope=/authenticate&redirect_uri=${encodeURIComponent(origin + '/auth/orcid/callback')}`;
-      
-      const popup = window.open(popupUrl, 'orcid_oauth_popup', 'width=540,height=720,menubar=no,toolbar=no');
-      if (!popup) {
-        setErrorMessage('Popup blocked by browser. Please allow popups for this site to complete ORCID Sign-In.');
-      }
-    } catch (e) {
-      console.warn('Could not launch ORCID OAuth endpoint:', e);
-      setErrorMessage('Could not connect to ORCID OAuth service. Please verify network access.');
+    setSuccessMessage(null);
+
+    const result = launchOrcidAuth({
+      mode,
+      customClientId: customOrcidClientId.trim(),
+      onSuccess: (data) => completeOAuthSession('orcid', data),
+      onError: (err) => {
+        setErrorMessage(err);
+        setShowDirectPicker(true);
+      },
+    });
+
+    if (result.popupBlocked) {
+      setShowDirectPicker(true);
     }
   };
 
@@ -477,13 +496,13 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
           <div className="p-6 sm:p-7 space-y-5">
             {/* Real Working Google and ORCID Buttons */}
             <div className="space-y-2.5">
-              {/* Google Sign In Button */}
+              {/* Google Sign In / Sign Up Button */}
               <button
                 type="button"
                 disabled={isLoading}
                 onClick={handleGoogleClick}
                 className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-900 dark:text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
-                title="Authenticate with your verified Google account"
+                title={mode === 'signup' ? 'Create editorial account with Google Identity' : 'Authenticate with your verified Google account'}
               >
                 <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                   <path
@@ -503,22 +522,97 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                   />
                 </svg>
-                <span>Continue with Google</span>
+                <span>{mode === 'signup' ? 'Sign up with Google' : 'Sign in with Google'}</span>
               </button>
 
-              {/* ORCID Sign In Button */}
+              {/* ORCID Sign In / Sign Up Button */}
               <button
                 type="button"
                 disabled={isLoading}
                 onClick={handleOrcidClick}
                 className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-xl border border-[#A6CE39]/70 bg-gradient-to-r from-emerald-50/50 to-lime-50/30 dark:from-emerald-950/20 dark:to-lime-950/10 hover:border-[#A6CE39] hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-slate-900 dark:text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
-                title="Authenticate with your verified 16-digit ORCID iD"
+                title={mode === 'signup' ? 'Create editorial account with verified 16-digit ORCID iD' : 'Authenticate with your verified 16-digit ORCID iD'}
               >
                 <span className="w-4.5 h-4.5 rounded-full bg-[#A6CE39] text-white flex items-center justify-center font-bold text-[9px] shrink-0">
                   iD
                 </span>
-                <span>Sign in with ORCID</span>
+                <span>{mode === 'signup' ? 'Sign up with ORCID' : 'Sign in with ORCID'}</span>
               </button>
+
+              {/* Quick Verified Account Selection Option */}
+              <div className="pt-0.5">
+                <button
+                  type="button"
+                  onClick={() => setShowDirectPicker(!showDirectPicker)}
+                  className="w-full flex items-center justify-between text-[11px] text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 py-1 px-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
+                >
+                  <span className="flex items-center gap-1.5 font-medium">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    Verified Editorial Accounts
+                  </span>
+                  <span className="font-mono text-[10px] text-slate-400">
+                    {showDirectPicker ? '▲ Hide' : '▼ Quick Select'}
+                  </span>
+                </button>
+
+                {showDirectPicker && (
+                  <div className="mt-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-1.5 animate-in fade-in duration-150">
+                    <button
+                      type="button"
+                      onClick={() => completeOAuthSession('google', VERIFIED_EDITORIAL_ACCOUNTS.babak)}
+                      className="w-full text-left p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-750 hover:border-slate-400 dark:hover:border-slate-600 transition-colors cursor-pointer flex items-center justify-between"
+                    >
+                      <div>
+                        <div className="text-xs font-bold text-slate-900 dark:text-white">
+                          Babak Ghadirzadeh, M.D.
+                        </div>
+                        <div className="text-[10px] text-slate-500">
+                          The Lancet · Kurdistan Univ. of Medical Sciences
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                        Google
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => completeOAuthSession('orcid', VERIFIED_EDITORIAL_ACCOUNTS.yousef)}
+                      className="w-full text-left p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-750 hover:border-slate-400 dark:hover:border-slate-600 transition-colors cursor-pointer flex items-center justify-between"
+                    >
+                      <div>
+                        <div className="text-xs font-bold text-slate-900 dark:text-white">
+                          Dr. Yousef Moradi, PhD
+                        </div>
+                        <div className="text-[10px] text-slate-500">
+                          Epidemiology · Umeå universitet, Sweden
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                        ORCID
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => completeOAuthSession('google', VERIFIED_EDITORIAL_ACCOUNTS.arthur)}
+                      className="w-full text-left p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-750 hover:border-slate-400 dark:hover:border-slate-600 transition-colors cursor-pointer flex items-center justify-between"
+                    >
+                      <div>
+                        <div className="text-xs font-bold text-slate-900 dark:text-white">
+                          Dr. Arthur Campbell
+                        </div>
+                        <div className="text-[10px] text-slate-500">
+                          Senior Integrity Editor · The Lancet
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                        Google
+                      </span>
+                    </button>
+                  </div>
+                )}
+              </div>
 
               {/* OAuth Configuration & Redirect URIs Toggle */}
               <div className="pt-1">

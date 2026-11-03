@@ -428,14 +428,26 @@ const loadRegisteredEditors = (): StoredEditorUser[] => {
     },
     {
       id: 'editor-3',
-      name: 'Babak Ghadirzadeh',
+      name: 'Babak Ghadirzadeh, M.D.',
       email: 'ghadirzadeh.babak@gmail.com',
       password: 'editorial2026',
       journal: 'The Lancet',
       role: 'Senior Integrity Editor',
       orcid: '0000-0001-8492-3321',
-      institution: 'Clinical Evidence Consortium',
+      institution: 'Kurdistan University of Medical Sciences',
       authProvider: 'google',
+      createdAt: '2026-10-31T00:00:00.000Z',
+    },
+    {
+      id: 'editor-4',
+      name: 'Dr. Yousef Moradi, PhD',
+      email: 'yousef.moradi@umu.se',
+      password: 'editorial2026',
+      journal: 'BMJ Evidence-Based Medicine',
+      role: 'Methodology & Epidemiology Editor',
+      orcid: '0000-0002-3921-9874',
+      institution: 'Department of Diagnostics and Intervention, Umeå University',
+      authProvider: 'orcid',
       createdAt: '2026-10-31T00:00:00.000Z',
     },
   ];
@@ -576,7 +588,8 @@ app.post('/api/auth/federated', (req: Request, res: Response) => {
 
     if (!user) {
       // Auto-provision federated profile and persist to disk
-      const defaultName = provider === 'orcid' ? 'Dr. ' + (name || 'Academic Scholar') : (name || 'Google Verified Editor');
+      const resolvedName = name ? String(name).trim() : (provider === 'orcid' ? 'Dr. Academic Scholar' : 'Google Verified Editor');
+      const defaultName = resolvedName;
       user = {
         id: `editor-fed-${Date.now()}`,
         name: defaultName,
@@ -594,6 +607,9 @@ app.post('/api/auth/federated', (req: Request, res: Response) => {
       user.authProvider = provider;
       if (orcid) user.orcid = orcid;
       if (name) user.name = name;
+      if (journal) user.journal = journal;
+      if (role) user.role = role;
+      if (institution) user.institution = institution;
       saveRegisteredEditors(REGISTERED_EDITORS);
     }
 
@@ -606,7 +622,7 @@ app.post('/api/auth/federated', (req: Request, res: Response) => {
         role: user.role,
         orcid: user.orcid || '',
         institution: user.institution || '',
-        authProvider: provider,
+        authProvider: user.authProvider || provider,
         isLoggedIn: true,
       },
     });

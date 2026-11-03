@@ -110,11 +110,16 @@ export interface RetractedStudyContribution {
 }
 
 export interface FigureAuditFinding {
-  figureName: string;
-  figureType: 'Forest Plot' | 'Funnel Plot' | 'Summary Table' | 'Flowchart / PRISMA' | 'Visual Graphic';
-  containsRetractedData: boolean;
+  figureName?: string;
+  figureId?: string;
+  figureType?: 'Forest Plot' | 'Funnel Plot' | 'Summary Table' | 'Flowchart / PRISMA' | 'Visual Graphic' | string;
+  type?: string;
+  containsRetractedData?: boolean;
+  includesRetractedData?: boolean;
+  isForestPlot?: boolean;
   retractedDoi?: string;
-  details: string;
+  details?: string;
+  evidence?: string;
 }
 
 export interface FullTextAuditAnalysis {

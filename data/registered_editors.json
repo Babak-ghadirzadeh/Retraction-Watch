@@ -25,13 +25,13 @@
   },
   {
     "id": "editor-3",
-    "name": "Babak Ghadirzadeh",
+    "name": "Babak Ghadirzadeh, M.D.",
     "email": "ghadirzadeh.babak@gmail.com",
     "password": "editorial2026",
     "journal": "The Lancet",
     "role": "Senior Integrity Editor",
     "orcid": "0000-0001-8492-3321",
-    "institution": "Clinical Evidence Consortium",
+    "institution": "Kurdistan University of Medical Sciences",
     "authProvider": "google",
     "createdAt": "2026-10-31T00:00:00.000Z"
   },
@@ -78,5 +78,16 @@
     "orcid": "0000-0003-8812-4411",
     "authProvider": "email",
     "createdAt": "2026-11-02T19:51:33.786Z"
+  },
+  {
+    "id": "editor-fed-1793732424346",
+    "name": "Dr. Yousef Moradi, PhD",
+    "email": "yousef.moradi@umu.se",
+    "journal": "BMJ Evidence-Based Medicine",
+    "role": "Methodology & Epidemiology Editor",
+    "orcid": "0000-0002-3921-9874",
+    "institution": "Department of Diagnostics and Intervention, Umeå University",
+    "authProvider": "orcid",
+    "createdAt": "2026-11-03T19:00:24.346Z"
   }
 ]
