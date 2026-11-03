@@ -1,0 +1,82 @@
+[
+  {
+    "id": "editor-1",
+    "name": "Dr. Arthur Campbell",
+    "email": "a.campbell@lancet-editorial.org",
+    "password": "editorial2026",
+    "journal": "The Lancet",
+    "role": "Senior Integrity Editor",
+    "orcid": "0000-0002-1825-0097",
+    "institution": "Lancet Editorial Board",
+    "authProvider": "email",
+    "createdAt": "2025-01-15T00:00:00.000Z"
+  },
+  {
+    "id": "editor-2",
+    "name": "Dr. Fiona Gallagher",
+    "email": "fiona.gallagher@bmj.com",
+    "password": "editorial2026",
+    "journal": "BMJ",
+    "role": "Editor-in-Chief",
+    "orcid": "0000-0003-4921-8842",
+    "institution": "BMJ Publishing Group",
+    "authProvider": "email",
+    "createdAt": "2025-03-20T00:00:00.000Z"
+  },
+  {
+    "id": "editor-3",
+    "name": "Babak Ghadirzadeh",
+    "email": "ghadirzadeh.babak@gmail.com",
+    "password": "editorial2026",
+    "journal": "The Lancet",
+    "role": "Senior Integrity Editor",
+    "orcid": "0000-0001-8492-3321",
+    "institution": "Clinical Evidence Consortium",
+    "authProvider": "google",
+    "createdAt": "2026-10-31T00:00:00.000Z"
+  },
+  {
+    "id": "editor-1793631417151",
+    "name": "Prof. Helen Vance",
+    "email": "test.editor.1793631417151@oxford-academic.org",
+    "password": "mypassword2026",
+    "journal": "Oxford Medical Case Reports",
+    "role": "Associate Integrity Lead",
+    "orcid": "0000-0003-8812-4411",
+    "authProvider": "email",
+    "createdAt": "2026-11-02T14:56:57.151Z"
+  },
+  {
+    "id": "editor-1793632991219",
+    "name": "Prof. Helen Vance",
+    "email": "test.editor.1793632991219@oxford-academic.org",
+    "password": "mypassword2026",
+    "journal": "Oxford Medical Case Reports",
+    "role": "Associate Integrity Lead",
+    "orcid": "0000-0003-8812-4411",
+    "authProvider": "email",
+    "createdAt": "2026-11-02T15:23:11.219Z"
+  },
+  {
+    "id": "editor-1793633198065",
+    "name": "Prof. Helen Vance",
+    "email": "test.editor.1793633198065@oxford-academic.org",
+    "password": "mypassword2026",
+    "journal": "Oxford Medical Case Reports",
+    "role": "Associate Integrity Lead",
+    "orcid": "0000-0003-8812-4411",
+    "authProvider": "email",
+    "createdAt": "2026-11-02T15:26:38.065Z"
+  },
+  {
+    "id": "editor-1793649093786",
+    "name": "Prof. Helen Vance",
+    "email": "test.editor.1793649093786@oxford-academic.org",
+    "password": "mypassword2026",
+    "journal": "Oxford Medical Case Reports",
+    "role": "Associate Integrity Lead",
+    "orcid": "0000-0003-8812-4411",
+    "authProvider": "email",
+    "createdAt": "2026-11-02T19:51:33.786Z"
+  }
+]

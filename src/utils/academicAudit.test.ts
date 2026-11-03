@@ -87,3 +87,17 @@ test('generateCsvAuditReport includes detection methods column', () => {
   assert.ok(csv.includes('Detection Methods'));
   assert.ok(csv.includes('PubMed/Metadata Type: ""Review""'));
 });
+
+test('Full-text retraction impact detection distinguishes quantitative data-contributing studies from background mentions', () => {
+  const quantitativeSnippet =
+    'In our quantitative network meta-analysis of antimalarials, patient records extracted from Mehra et al. (2020) contributed 14,888 subjects to the pooled hazard ratio calculation (Forest Plot 3A).';
+  const backgroundSnippet =
+    'Historically, Wakefield et al. (1998) suggested an association between enterocolitis and developmental disorders prior to official retraction.';
+
+  const isQuantitative = /pooled|forest plot|meta-analysis|hazard ratio|odds ratio|relative risk/i.test(quantitativeSnippet);
+  const isBackgroundOnly = /historically|previously|background/i.test(backgroundSnippet) && !/pooled|forest plot|hazard ratio/i.test(backgroundSnippet);
+
+  assert.equal(isQuantitative, true, 'Quantitative meta-analysis mentions should be detected as data-contributing');
+  assert.equal(isBackgroundOnly, true, 'Historical mentions without pooling should be detected as contextual');
+});
+

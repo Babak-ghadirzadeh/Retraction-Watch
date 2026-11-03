@@ -7,6 +7,10 @@ export interface Journal {
   homepage?: string;
   worksCount?: number;
   subjects?: string[];
+  isPubMedIndexed?: boolean;
+  medlineTa?: string;
+  nlmId?: string;
+  country?: string;
 }
 
 export interface CitedReference {
@@ -73,3 +77,61 @@ export interface SavedAuditSession {
   auditedArticles: AuditedArticleResult[];
   notes?: string;
 }
+
+export interface SentenceImpact {
+  id: string;
+  sentence: string;
+  section: string;
+  retractedDoi: string;
+  retractedTitle: string;
+  impactLevel: 'Critical' | 'Substantial' | 'Minimal' | 'Contextual';
+  analysis: string;
+  effectOnSynthesis: string;
+}
+
+export interface EditorialRecommendation {
+  action: string;
+  priority: 'Immediate Action' | 'Recommended Review' | 'Optional Erratum';
+  rationale: string;
+  draftNotice?: string;
+}
+
+export interface RetractedStudyContribution {
+  doi: string;
+  title: string;
+  isDataContributing: boolean;
+  contributionType:
+    | 'Quantitative Meta-Analysis'
+    | 'Qualitative Evidence Synthesis'
+    | 'Background / Historical Citation'
+    | 'Methodological Reference';
+  explanation: string;
+  pooledDataImpact: string;
+}
+
+export interface FigureAuditFinding {
+  figureName: string;
+  figureType: 'Forest Plot' | 'Funnel Plot' | 'Summary Table' | 'Flowchart / PRISMA' | 'Visual Graphic';
+  containsRetractedData: boolean;
+  retractedDoi?: string;
+  details: string;
+}
+
+export interface FullTextAuditAnalysis {
+  articleDoi: string;
+  articleTitle: string;
+  analyzedAt: string;
+  fileName?: string;
+  fileMimeType?: string;
+  overallVerdict:
+    | 'Contaminated Synthesis'
+    | 'Sensitized Conclusions'
+    | 'Uncontaminated / Background Citation';
+  contributions: RetractedStudyContribution[];
+  sentenceImpacts: SentenceImpact[];
+  figuresAudited?: FigureAuditFinding[];
+  overallSynthesisEffect: string;
+  recommendations: EditorialRecommendation[];
+}
+
+

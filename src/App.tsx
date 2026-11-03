@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { Navbar } from './components/Navbar';
+import { EditorialLoginPage } from './components/EditorialLoginPage';
 import { EditorAuthModal } from './components/EditorAuthModal';
 import { JournalSearchSection } from './components/JournalSearchSection';
 import { ArticleSelectionTable } from './components/ArticleSelectionTable';
 import { AuditReportDashboard } from './components/AuditReportDashboard';
 import { IndividualArticleScanner } from './components/IndividualArticleScanner';
 import { AuditHistoryDrawer } from './components/AuditHistoryDrawer';
+import { FullTextAuditView } from './components/FullTextAuditView';
+import { HomePage } from './components/HomePage';
 import {
   Journal,
   ReviewArticle,
@@ -19,14 +22,21 @@ const STORAGE_KEY_EDITOR = 'retractscan_editor_profile';
 const STORAGE_KEY_SESSIONS = 'retractscan_saved_sessions';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'journal' | 'single' | 'history'>('journal');
+  const [activeTab, setActiveTab] = useState<'home' | 'journal' | 'single' | 'history' | 'fulltext'>('home');
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isSigningIn, setIsSigningIn] = useState(false);
+  const [pendingTab, setPendingTab] = useState<'journal' | 'single' | 'history' | 'fulltext'>('journal');
+  const [fullTextQueue, setFullTextQueue] = useState<AuditedArticleResult[]>([]);
+  const [fullTextInitialIndex, setFullTextInitialIndex] = useState<number>(0);
 
-  // Editor profile state with persistence
+  // Editor profile state with persistence (default to isLoggedIn: false so user lands on Home first)
   const [editor, setEditor] = useState<EditorProfile>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_EDITOR);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return { ...parsed, isLoggedIn: false };
+      }
     } catch (e) {
       // ignore
     }
@@ -35,10 +45,9 @@ export default function App() {
       email: 'a.campbell@lancet-editorial.org',
       journal: 'The Lancet',
       role: 'Senior Integrity Editor',
-      orcid: '0000-0002-1825-0097',
-      authProvider: 'orcid',
+      authProvider: 'email',
       institution: 'Lancet Editorial Board',
-      isLoggedIn: true,
+      isLoggedIn: false,
     };
   });
 
@@ -62,6 +71,25 @@ export default function App() {
   const [auditResults, setAuditResults] = useState<AuditedArticleResult[] | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Handle navigation tab changes with authentication gating for audit tools
+  const handleTabChange = (tab: 'home' | 'journal' | 'single' | 'history' | 'fulltext') => {
+    if (tab === 'home') {
+      setActiveTab('home');
+      setIsSigningIn(false);
+      return;
+    }
+
+    // Require sign-in to use the audit tools
+    if (!editor.isLoggedIn) {
+      setPendingTab(tab);
+      setIsSigningIn(true);
+      return;
+    }
+
+    setActiveTab(tab);
+    setIsSigningIn(false);
+  };
+
   // Save profile changes
   const handleSaveProfile = (profile: EditorProfile) => {
     setEditor(profile);
@@ -71,6 +99,37 @@ export default function App() {
       console.warn('Could not persist editor profile:', e);
     }
     showToast('Editor credentials updated successfully');
+  };
+
+  // Sign in and transition to requested tool
+  const handleLogin = (profile: EditorProfile) => {
+    const updated: EditorProfile = { ...profile, isLoggedIn: true };
+    setEditor(updated);
+    setIsSigningIn(false);
+    setActiveTab(pendingTab || 'journal');
+    try {
+      localStorage.setItem(STORAGE_KEY_EDITOR, JSON.stringify(updated));
+    } catch (e) {
+      console.warn('Could not persist editor profile:', e);
+    }
+    showToast(`Welcome, ${updated.name}. Active session for ${updated.journal || 'Academic Journal'}.`);
+  };
+
+  // Sign out back to home page
+  const handleLogout = () => {
+    const loggedOut: EditorProfile = {
+      ...editor,
+      isLoggedIn: false,
+    };
+    setEditor(loggedOut);
+    setActiveTab('home');
+    setIsSigningIn(false);
+    try {
+      localStorage.setItem(STORAGE_KEY_EDITOR, JSON.stringify(loggedOut));
+    } catch (e) {
+      console.warn('Could not persist editor profile:', e);
+    }
+    showToast('Signed out of editorial session.');
   };
 
   const showToast = (msg: string) => {
@@ -96,7 +155,7 @@ export default function App() {
       const primaryIssn = journal?.issn?.[0] || '';
       const url = `/api/academic/journal-articles?issn=${encodeURIComponent(
         primaryIssn
-      )}&yearFrom=${yearFrom}&yearTo=${yearTo}&maxArticles=${maxArticles}`;
+      )}&title=${encodeURIComponent(journal.title)}&yearFrom=${yearFrom}&yearTo=${yearTo}&maxArticles=${maxArticles}`;
 
       const res = await fetch(url);
       const data = await res.json().catch(() => ({ articles: [] }));
@@ -247,15 +306,48 @@ export default function App() {
     showToast(`Loaded archived audit for ${session.journalName}`);
   };
 
+  // If currently in the sign-in / registration flow, show the dedicated login portal
+  if (isSigningIn) {
+    return (
+      <div className="relative">
+        {toastMessage && (
+          <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-4 py-3 rounded-lg shadow-lg text-xs font-medium flex items-center gap-2 border border-slate-700/50 dark:border-slate-300 animate-in fade-in slide-in-from-bottom-2 duration-200">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 dark:text-emerald-600" />
+            <span>{toastMessage}</span>
+          </div>
+        )}
+        <EditorialLoginPage
+          onLogin={handleLogin}
+          lastEditor={editor}
+          onBackToHome={() => setIsSigningIn(false)}
+        />
+      </div>
+    );
+  }
+
+  // Launch Full-Text Retraction Impact & AI Verification workspace
+  const handleStartFullTextAudit = (selectedArticles: AuditedArticleResult[], initialIndex = 0) => {
+    if (!selectedArticles || selectedArticles.length === 0) return;
+    setFullTextQueue(selectedArticles);
+    setFullTextInitialIndex(initialIndex);
+    setActiveTab('fulltext');
+    showToast(`Loaded ${selectedArticles.length} review study into Full-Text AI verification workspace.`);
+  };
+
   return (
     <div className="min-h-screen bg-[#fafaf8] dark:bg-[#0f1115] text-slate-800 dark:text-slate-200 flex flex-col font-sans transition-colors">
       {/* Top Bar Navigation */}
       <Navbar
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         editor={editor}
-        onOpenAuth={() => setIsAuthOpen(true)}
+        onOpenAuth={() => {
+          setPendingTab('journal');
+          setIsSigningIn(true);
+        }}
+        onLogout={handleLogout}
         auditCount={savedSessions.length}
+        fullTextCount={fullTextQueue.length}
       />
 
       {/* Main Viewport Container */}
@@ -266,6 +358,16 @@ export default function App() {
             <CheckCircle2 className="w-4 h-4 text-emerald-400 dark:text-emerald-600" />
             <span>{toastMessage}</span>
           </div>
+        )}
+
+        {/* View 0: Minimalist Home & Capabilities Landing Page (Default Entry Page) */}
+        {activeTab === 'home' && (
+          <HomePage
+            onStartAudit={() => handleTabChange('journal')}
+            onSingleArticle={() => handleTabChange('single')}
+            onExploreFullText={() => handleTabChange('fulltext')}
+            auditCount={savedSessions.length}
+          />
         )}
 
         {/* View 1: Journal Batch Audit */}
@@ -321,6 +423,7 @@ export default function App() {
                   editor={editor}
                   onUpdateCitationStatus={handleUpdateCitationStatus}
                   onSaveToHistory={() => handleSaveToHistory()}
+                  onStartFullTextAudit={handleStartFullTextAudit}
                 />
               </div>
             )}
@@ -335,7 +438,23 @@ export default function App() {
           />
         )}
 
-        {/* View 3: Saved Audit History */}
+        {/* View 3: Full-Text Retraction Impact & AI Evidence Verification */}
+        {activeTab === 'fulltext' && (
+          <FullTextAuditView
+            selectedArticles={
+              fullTextQueue.length > 0
+                ? fullTextQueue
+                : auditResults && auditResults.length > 0
+                ? auditResults.filter((a) => a.hasRetractedCitation)
+                : []
+            }
+            initialActiveIndex={fullTextInitialIndex}
+            onBackToAudit={() => setActiveTab('journal')}
+            editor={editor}
+          />
+        )}
+
+        {/* View 4: Saved Audit History */}
         {activeTab === 'history' && (
           <AuditHistoryDrawer
             sessions={savedSessions}

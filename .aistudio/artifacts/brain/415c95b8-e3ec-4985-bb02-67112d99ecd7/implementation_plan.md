@@ -1,154 +1,96 @@
-# RetractScan: Journal Editorial Citation & Retraction Audit Platform
+# RetractScan: Home Landing Page, Clean Full-Text Audit, & Editorial Notes Export
 
-A specialized editorial integrity platform for journal editors to identify review and secondary studies, audit their bibliography against Crossref, PubMed, and OpenAlex retraction registries, and generate actionable editorial risk reports with PDF and CSV export.
-
-> [!IMPORTANT]
-> **Confirmed Editorial Requirements**:
-> - **Retraction Validation Engine**: Hybrid verification querying **Crossref**, **PubMed**, and **OpenAlex** to catch retractions, expressions of concern, and post-publication notices.
-> - **Review & Secondary Study Detection**: Three-layer hybrid approach combining **metadata publication types**, **AI abstract classification** via Gemini 3.8 Flash, and **keyword pattern matching** (systematic reviews, meta-analyses, scoping reviews, guideline overviews).
-> - **Reporting & Export**: **Interactive editorial dashboard** with comprehensive risk visualizer, flagged citation context viewer, **PDF printable report**, and **CSV audit export**.
-> - **Dual Auditing Modes**: Batch journal audit (timeline + max article limit + multi-select/select all) and Individual Article Lookup (by DOI or PubMed URL/PMID).
+A comprehensive implementation plan to refine RetractScan's editorial integrity platform: introducing a minimalist Home landing page with a "Meet the Developers" profile section, decluttering the Full-Text AI Impact workspace into a clean, card-based interface, and adding dual-format report exporting (PDF Dossier and CSV) with customizable editorial notes.
 
 ---
 
-## 1. Overview & Core Concept
+### User Decisions Confirmed
 
-RetractScan empowers journal editors, managing editors, and peer review coordinators to protect their journal's scientific integrity. Secondary research—systematic reviews, meta-analyses, scoping reviews, and clinical practice guidelines—synthesizes primary evidence. When a review study inadvertently cites retracted primary research as valid evidence, its synthesized conclusions and pooled effect sizes can become compromised.
-
-RetractScan automates the discovery, extraction, verification, and editorial resolution of such compromised citations:
-1. **Editor Authentication & Workspace**: Quick editor profile setup with journal affiliation, ORCID/email, and persistent audit session logs.
-2. **Journal Discovery**: Live search via Crossref and OpenAlex APIs, displaying verified ISSNs, publisher details, and direct links to official journal pages.
-3. **Review Identification**: Filters articles across user-specified timelines (e.g., 2026, 2025, 2024, or custom year ranges) and batch sizes. Utilizes a 3-layer detection pipeline (official metadata types, keyword heuristics, and Gemini 3.8 Flash abstract classification) to isolate secondary studies.
-4. **Selective Batch Audit**: Interactive data table with individual selection checkboxes, select-all toggle, and instant filtering.
-5. **AI Reference Parsing & Retraction Verification**: Extracts referenced works from Crossref and OpenAlex, checks each cited paper's retraction status, retraction date relative to review publication date, and flags whether the citation occurred *after* retraction.
-6. **Interactive Editorial Dashboard & Exports**: Visual risk matrices, citation graph breakdowns, editorial assessment status markers (e.g. "Request Author Corrigendum", "Editorial Note", "In Review"), and 1-click PDF/CSV exports.
-7. **Ad-Hoc DOI & PubMed Scanner**: Direct single-article validator for incoming manuscript submissions or flagged articles.
+> [!NOTE]
+> Based on your responses:
+> 1. **Meet the Developers**: Featured profiles for:
+>    - **Dr. Yousef Moradi, BSc, MSc, PhD**: Researcher in epidemiology at the Department of Diagnostics and Intervention, Umeå University (Umeå universitet), Sweden. Specializes in register-based health research, clinical epidemiology, meta-research, and evidence synthesis across large population cohorts.
+>    - **Dr. Babak Ghadirzadeh, M.D.**: Physician and clinical researcher affiliated with Kurdistan University of Medical Sciences (Social Determinants of Health Research Center, Research Institute for Health Development). Dedicated to evidence synthesis, systematic reviews, clinical meta-analyses, and safeguarding the validity of secondary biomedical literature.
+>    - *Photos*: User will supply high-resolution photos later; elegant clinical academic avatar badges will be utilized in the meantime.
+> 2. **Navigation & Home**: A minimalist, high-impact landing page introducing RetractScan's purpose and capabilities, with quick links to start an audit, explore saved audits, and meet the founding researchers.
+> 3. **Clean Full-Text Audit Layout**: The raw manuscript text reader is removed to eliminate visual clutter, focusing immediately on the **Data-Contribution Status Badge**, cited sentence locations, impact assessments, and actionable recommendations.
+> 4. **Export with Editorial Notes**: Formatted PDF printable dossier and CSV exports, both incorporating optional user-authored editorial assessments and recommendations.
 
 ---
 
-## 2. User Experience & Visual Design
-
-RetractScan adheres to modern SaaS and scientific dashboard design principles: calm neutral slate aesthetics (`#0F172A` / `#F8FAFC`), crisp typography (`Plus Jakarta Sans` for headers, `DM Sans` for body, `JetBrains Mono` / tabular numbers for ISSNs, DOIs, and counts), and zero generic AI cliches.
-
-### Key User Flows
+### 1. Proposed Architectural Changes
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ 1. Editor Login / Workspace (Affiliation, Journal Selection, Saved Audits)  │
+│ 1. Minimalist Home Page (src/components/HomePage.tsx)                       │
+│ ├── Hero: Platform purpose (Safeguarding Evidence Synthesis)                │
+│ ├── Capabilities Grid: Journal Screening, Retraction Detection, AI Impact   │
+│ ├── Workflow Infographic: From Ingestion to COPE Decision                   │
+│ ├── Meet the Developers: Dr. Yousef Moradi & Dr. Babak Ghadirzadeh          │
+│ └── CTA: "Launch Journal Audit" / "Run Single DOI Check"                    │
 └──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
                                        ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ 2. Mode Selector: [Journal Batch Audit]  or  [Single DOI / PubMed Assessor] │
-└──────────────────┬──────────────────────────────────────┬───────────────────┘
-                   ▼                                      ▼
-┌─────────────────────────────────────┐   ┌───────────────────────────────────┐
-│ Journal Search & Timeline Filter    │   │ Individual DOI / PubMed Resolver  │
-│ - Live Crossref/OpenAlex search     │   │ - Auto-resolves metadata & PMID   │
-│ - Select ISSN & Journal details     │   │ - Pulls full reference list       │
-│ - Date range & max article limit    │   │ - Direct retraction scan          │
-└──────────────────┬──────────────────┘   └──────────────────┬────────────────┘
-                   ▼                                         │
-┌─────────────────────────────────────┐                      │
-│ Review Studies Identification Table │                      │
-│ - Filtered secondary studies list   │                      │
-│ - Select All / Individual toggles   │                      │
-│ - AI study type confidence & tags   │                      │
-└──────────────────┬──────────────────┘                      │
-                   ▼                                         │
-┌────────────────────────────────────────────────────────────┴────────────────┐
-│ 3. Citation & Retraction Verification Engine (Crossref + OpenAlex + PubMed) │
-└──────────────────────────────────────┬──────────────────────────────────────┘
-                                       ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ 4. Interactive Editorial Assessment Dashboard                               │
-│ - High-level Risk Summary & Matrix (Retracted citations / Total cited)      │
-│ - Per-article breakdown with collapsible flagged references                 │
-│ - Retraction details: Retraction notice DOI, date, retraction reason        │
-│ - Editorial action checklists (Corrigendum / Note / Valid discussion)       │
-│ - Export buttons: Professional Print/PDF report & CSV audit ledger          │
+│ 2. Streamlined FullTextAuditView (src/components/FullTextAuditView.tsx)     │
+│ ├── Tabbed Queue (for multi-selected review articles)                       │
+│ ├── Clean Document Upload & Parsing Banner                                  │
+│ ├── Data-Contribution Determination Banner (Quantitative vs Contextual)     │
+│ ├── In-Text Retracted Citation Sentences (Section location, Quote, Effect)  │
+│ ├── Synthesis Impact & Risk Analysis                                        │
+│ ├── Interactive Editorial Notes & Action Plan (Custom user input field)     │
+│ └── Dual Export Actions:                                                    │
+│      ├── Export Print/PDF Dossier (styled printable document with notes)    │
+│      └── Export CSV Report (includes all fields + editorial remarks)        │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Visual Identity & Theme Tokens
-- **Canvas**: Clean high-contrast white & slate backgrounds (`bg-slate-50 dark:bg-slate-950`).
-- **Primary & Action**: Academic navy and indigo (`text-indigo-600 dark:text-indigo-400`, `bg-indigo-600 hover:bg-indigo-700`).
-- **Semantic Severity**:
-  - **Retracted Citation (Critical Alert)**: Deep crimson (`bg-red-50 border-red-200 text-red-800 dark:bg-red-950/30 dark:border-red-900 dark:text-red-300`).
-  - **Expression of Concern (High Warning)**: Amber (`bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/30 dark:border-amber-900 dark:text-amber-300`).
-  - **Clean / Verified (Nominal)**: Emerald (`text-emerald-700 dark:text-emerald-400`).
-- **Typography**: Single-line controls, zero-pill metadata with typographic `·` separators, tabular figures for DOIs and dates.
+---
+
+### 2. Detailed Component Plan
+
+#### A. Minimalist Home Page (`src/components/HomePage.tsx`)
+- **Aesthetic**: Cream/slate palette (`bg-[#fafaf8]`, crisp dark borders, zero-pill styling, scientific typography).
+- **Sections**:
+  1. **Hero**: Clear statement of purpose—identifying post-publication retractions propagated into systematic reviews, meta-analyses, and clinical guidelines.
+  2. **Core Capabilities**:
+     - *Automated Secondary Literature Detection*: Heuristic identification of reviews vs primary studies.
+     - *Multi-Registry Retraction Cross-Referencing*: Crossref, OpenAlex, and PubMed retraction indexing.
+     - *Full-Text AI Evidence Synthesis Audit*: Differentiating between studies that contribute quantitative effect sizes and those cited merely in background context.
+     - *COPE-Aligned Decision Support*: Actionable recommendations for corrections, sensitivity re-analyses, or expressions of concern.
+  3. **Interactive Demo / Quick Stats**: Direct metrics on retraction persistence in biomedicine.
+  4. **Meet the Developers**:
+     - Clean academic profile cards for **Dr. Yousef Moradi, BSc, MSc, PhD** (Umeå University) and **Dr. Babak Ghadirzadeh, M.D.** (Kurdistan University of Medical Sciences).
+     - Institutional affiliations, research tracks (epidemiology, register-based studies, systematic reviews), and placeholder avatar slots ready for user-supplied headshots.
+  5. **Quick Launch Actions**: Buttons to immediately start a Journal Audit or jump into the Full-Text workspace.
+
+#### B. Streamlined Full-Text Audit View (`src/components/FullTextAuditView.tsx`)
+- Remove the left two-column manuscript text reader block.
+- Convert to a single cohesive, high-density evaluation dashboard:
+  - **Header & Tab Queue**: Fast navigation between selected review articles.
+  - **Upload / Sample Ingestion Header**: Drag-and-drop zone or sample loader that immediately parses and triggers the audit.
+  - **Prominent Verdict Banner**:
+    - **CRITICAL DATA-CONTRIBUTING STUDY** (Rose/Crimson badge): The retracted study contributed to pooled effect sizes or qualitative synthesis.
+    - **BACKGROUND / CONTEXTUAL CITATION** (Slate badge): The retracted study is cited only in introduction/discussion.
+  - **Sentence Impact Cards / Table**: Displays each extracted citation sentence, its section (e.g. *Results / Meta-analysis*, *Methods*, *Introduction*), and its effect level with explanation.
+  - **Editorial Notes Input Area**: An interactive, persistent textarea allowing the editor to record custom observations, journal internal review notes, or committee decisions.
+  - **Export Toolbar**:
+    - `Export PDF Dossier`: Generates an official, print-ready retraction dossier modal or formatted print preview with all metadata, AI findings, and custom notes.
+    - `Export CSV`: Downloads an enriched spreadsheet with a dedicated `Editorial Notes` column.
+
+#### C. Navigation & Integration (`src/App.tsx` & `src/components/Navbar.tsx`)
+- Add `'home'` to the active view states (`'home' | 'dashboard' | 'audit' | 'single' | 'fulltext' | 'history'`).
+- Set `'home'` as the primary initial view for new visitors, with clear navbar access to all audit tools.
+- Ensure state persistence: Switching between Home and Full-Text Audit retains uploaded files, AI results, and editor notes.
 
 ---
 
-## 3. Key Product Decisions & Trade-Offs
+### 3. Verification & Testing Steps
 
-1. **Three-Layer Secondary Study Classifier**:
-   - *Why*: Relying solely on publisher metadata tags fails because many journals label systematic reviews generically as "journal-article" or "article". Combining (1) OpenAlex/PubMed type tags, (2) title/abstract keyword regexes, and (3) Gemini 3.8 Flash structured semantic classification guarantees maximum recall and precision for systematic reviews, meta-analyses, and scoping reviews.
-2. **Server-Side Proxy Architecture for Academic APIs**:
-   - *Why*: Crossref, PubMed E-utilities, and OpenAlex require custom User-Agent headers (polite pool) and avoid browser CORS restrictions. Express server routes (`/api/academic/*`) proxy and cache these requests securely, with server-side `@google/genai` calls using `process.env.GEMINI_API_KEY`.
-3. **Pre- vs. Post-Retraction Citation Timing**:
-   - *Why*: An article citing a paper *before* it was retracted is unfortunate, but citing a paper *years after* it was retracted is a major editorial failure. RetractScan calculates the delta between the review publication date and the cited paper's retraction date, flagging post-retraction citations with elevated critical risk.
-4. **Interactive Editorial Action Tracking**:
-   - *Why*: Editors need more than a list; they need an assessment workflow. Editors can mark citations as "Flagged for Corrigendum", "Author Alert Sent", "Dismissed (Discussions of retraction)", or "Under Review", and save the state locally for ongoing audits.
-
----
-
-## 4. Technical Architecture & Data Strategy
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                                Frontend (React)                             │
-│                                                                             │
-│  ┌───────────────────────┐  ┌───────────────────────┐  ┌─────────────────┐  │
-│  │ Editor Login / Profile│  │ Journal Search & Feed │  │ Individual DOI  │  │
-│  └───────────────────────┘  └───────────────────────┘  └─────────────────┘  │
-│  ┌───────────────────────────────────────────────────────────────────────┐  │
-│  │ Article Selection Table (Multi-select, Select All, Study Type Badges) │  │
-│  └───────────────────────────────────────────────────────────────────────┘  │
-│  ┌───────────────────────────────────────────────────────────────────────┐  │
-│  │ Audit Dashboard: Visual Risk Matrix, Flagged Citations, PDF/CSV Export│  │
-│  └───────────────────────────────────────────────────────────────────────┘  │
-└──────────────────────────────────────┬──────────────────────────────────────┘
-                                       │ HTTP API Calls (/api/*)
-                                       ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                          Backend Proxy Server (Express)                     │
-│                                                                             │
-│  ┌──────────────────────┐  ┌──────────────────────┐  ┌───────────────────┐  │
-│  │ /api/academic/search │  │ /api/academic/journal│  │ /api/academic/doi │  │
-│  └──────────┬───────────┘  └──────────┬───────────┘  └─────────┬─────────┘  │
-│             │                         │                        │            │
-│  ┌──────────▼─────────────────────────▼────────────────────────▼──────────┐  │
-│  │ Citation & Retraction Verification Service                             │  │
-│  │ - Crossref Works & Update-to API                                       │  │
-│  │ - OpenAlex Works (is_retracted flag, referenced_works)                 │  │
-│  │ - PubMed E-utilities (PMID <-> DOI conversion & pub types)             │  │
-│  └────────────────────────────────────┬───────────────────────────────────┘  │
-│                                       │                                      │
-│  ┌────────────────────────────────────▼───────────────────────────────────┐  │
-│  │ Gemini 3.8 Flash AI Engine (@google/genai)                             │  │
-│  │ - Abstract Review Type Classifier                                      │  │
-│  │ - Unstructured Citation String Extractor                               │  │
-│  │ - Citation Context & Editorial Impact Summarizer                       │  │
-│  └────────────────────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-### Key API Endpoints
-- `GET /api/academic/journals?q={name}`: Queries Crossref and OpenAlex for journals, ISSNs, homepage links, and publishers.
-- `GET /api/academic/journal-articles`: Fetches articles for an ISSN across specified years (e.g. 2024-2026), applying the 3-layer review filter.
-- `POST /api/academic/audit-batch`: Takes a list of selected article DOIs/PMIDs, extracts their bibliography, verifies every cited DOI against Crossref and OpenAlex retraction registries, and returns structured citation risk reports.
-- `GET /api/academic/resolve-article?identifier={doi_or_pmid}`: Resolves a single DOI or PubMed URL/ID, returns title, authors, journal, and runs the citation retraction audit.
-- `POST /api/gemini/classify-reviews`: Uses `gemini-3.8-flash` to classify ambiguous papers into review taxonomy (Systematic Review, Meta-Analysis, Scoping Review, Guideline, Narrative Review, Primary Study).
-
----
-
-## 5. Verification Plan
-
-1. **Unit Tests (`node:test` via `npx --yes tsx --test`)**:
-   - Test review detection heuristics and regex pattern matching.
-   - Test retraction timing calculations (pre- vs. post-retraction citation delta).
-   - Test CSV export formatting and DOI/PMID parsing routines.
-2. **End-to-End User Journeys**:
-   - **Journey 1 (Batch Audit)**: Login -> Search journal (e.g. "The Lancet" or "BMJ") -> Select timeline and article count -> Review and filter secondary studies -> Select All / Individual items -> Run retraction scan -> Inspect visual risk report -> Download CSV audit sheet.
-   - **Journey 2 (Single DOI/PubMed Lookup)**: Switch to individual article view -> Input DOI or PubMed URL -> Auto-fetch metadata and bibliography -> Flag retracted citations -> Record editorial assessment note -> Print/export PDF summary.
+1. **Home Page Validation**: Check responsiveness, typography, developer profile descriptions, and quick action navigation.
+2. **Layout Cleanliness**: Verify the full-text reader is removed and the full-text AI impact view renders cleanly as a focused assessment suite.
+3. **Editorial Notes Integration**: Enter custom notes for an article and verify they persist during active session switching.
+4. **PDF & CSV Export Verification**:
+   - Trigger the CSV export and check that custom editorial notes are properly formatted and escaped in the file.
+   - Trigger the PDF/Print Dossier and verify clean page layout, headers, data-contribution verdict, sentence table, and editor notes.
+5. **Code Quality**: Run `compile_applet` and `lint_applet` to ensure zero compilation or type errors.

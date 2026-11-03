@@ -13,6 +13,8 @@ import {
   ShieldCheck,
   AlertOctagon,
   Filter,
+  Sparkles,
+  BookOpen,
 } from 'lucide-react';
 import { AuditedArticleResult, CitedReference, EditorProfile } from '../types/academic';
 import { generateCsvAuditReport } from '../utils/academicAudit';
@@ -28,6 +30,7 @@ interface AuditReportDashboardProps {
     notes: string
   ) => void;
   onSaveToHistory: () => void;
+  onStartFullTextAudit?: (articles: AuditedArticleResult[], initialIndex?: number) => void;
 }
 
 export const AuditReportDashboard: React.FC<AuditReportDashboardProps> = ({
@@ -36,9 +39,25 @@ export const AuditReportDashboard: React.FC<AuditReportDashboardProps> = ({
   editor,
   onUpdateCitationStatus,
   onSaveToHistory,
+  onStartFullTextAudit,
 }) => {
   const [filterMode, setFilterMode] = useState<'all' | 'flagged' | 'clean'>('all');
   const [expandedArticles, setExpandedArticles] = useState<Record<string, boolean>>({});
+
+  // Selection map for full-text deep audit
+  const [selectedForDeepAudit, setSelectedForDeepAudit] = useState<Record<string, boolean>>(() => {
+    const map: Record<string, boolean> = {};
+    auditResults.forEach((a) => {
+      if (a.hasRetractedCitation) map[a.doi] = true;
+    });
+    return map;
+  });
+
+  const toggleSelectForDeepAudit = (doi: string) => {
+    setSelectedForDeepAudit((prev) => ({ ...prev, [doi]: !prev[doi] }));
+  };
+
+  const selectedArticlesForAudit = auditResults.filter((a) => selectedForDeepAudit[a.doi]);
 
   // Summary Metrics
   const totalArticles = auditResults.length;
@@ -183,7 +202,25 @@ export const AuditReportDashboard: React.FC<AuditReportDashboardProps> = ({
         </div>
 
         {/* Export and Save actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {onStartFullTextAudit && (
+            <button
+              type="button"
+              onClick={() => {
+                const targetArticles =
+                  selectedArticlesForAudit.length > 0
+                    ? selectedArticlesForAudit
+                    : auditResults.filter((a) => a.hasRetractedCitation);
+                onStartFullTextAudit(targetArticles.length > 0 ? targetArticles : auditResults);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white shadow-xs transition-colors cursor-pointer"
+              title="Launch full-text AI evaluation to check data-contribution status and sentence-level effects"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-200" />
+              <span>Analyze Full-Text Impact (AI) ({selectedArticlesForAudit.length})</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={onSaveToHistory}
@@ -235,59 +272,81 @@ export const AuditReportDashboard: React.FC<AuditReportDashboardProps> = ({
               }`}
             >
               {/* Header: Status Tag & Title */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-slate-200/70 dark:border-slate-800">
-                <div className="flex-1">
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    {/* Status badge */}
-                    {isCritical ? (
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-rose-800 dark:text-rose-200 bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-800 px-2 py-0.5 rounded flex items-center gap-1">
-                        <AlertOctagon className="w-3.5 h-3.5" />
-                        <span>Critical: Post-Retraction Citation</span>
-                      </span>
-                    ) : hasRetractions ? (
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/80 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded flex items-center gap-1">
-                        <AlertTriangle className="w-3.5 h-3.5" />
-                        <span>Warning: Retracted Work Cited</span>
-                      </span>
-                    ) : (
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-800 dark:text-emerald-200 bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded flex items-center gap-1">
-                        <CheckCircle className="w-3.5 h-3.5" />
-                        <span>Verified Clean Bibliography</span>
-                      </span>
-                    )}
+              <div className="flex flex-col md:flex-row md:items-start justify-between gap-3 pb-3 border-b border-slate-200/70 dark:border-slate-800">
+                <div className="flex items-start gap-3 flex-1">
+                  <input
+                    type="checkbox"
+                    checked={!!selectedForDeepAudit[article.doi]}
+                    onChange={() => toggleSelectForDeepAudit(article.doi)}
+                    className="w-4 h-4 rounded text-amber-600 border-slate-300 dark:border-slate-700 cursor-pointer mt-1 shrink-0"
+                    title="Select this article for full-text AI impact evaluation"
+                  />
 
-                    <span className="text-xs text-slate-500 dark:text-slate-400">
-                      <span>{article.studyType}</span>
-                      <span className="mx-1.5" aria-hidden="true">·</span>
-                      <span>Published {article.pubDate}</span>
-                      <span className="mx-1.5" aria-hidden="true">·</span>
-                      <span className="font-mono tabular-nums">{article.totalReferences} references</span>
-                    </span>
-                  </div>
+                  <div className="flex-1">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      {/* Status badge */}
+                      {isCritical ? (
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-rose-800 dark:text-rose-200 bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-800 px-2 py-0.5 rounded flex items-center gap-1">
+                          <AlertOctagon className="w-3.5 h-3.5" />
+                          <span>Critical: Post-Retraction Citation</span>
+                        </span>
+                      ) : hasRetractions ? (
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/80 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded flex items-center gap-1">
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                          <span>Warning: Retracted Work Cited</span>
+                        </span>
+                      ) : (
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-800 dark:text-emerald-200 bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded flex items-center gap-1">
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          <span>Verified Clean Bibliography</span>
+                        </span>
+                      )}
 
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white leading-snug">
-                    {article.title}
-                  </h3>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">
+                        <span>{article.studyType}</span>
+                        <span className="mx-1.5" aria-hidden="true">·</span>
+                        <span>Published {article.pubDate}</span>
+                        <span className="mx-1.5" aria-hidden="true">·</span>
+                        <span className="font-mono tabular-nums">{article.totalReferences} references</span>
+                      </span>
+                    </div>
 
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                    <span className="truncate max-w-sm">
-                      {article.authors.join('; ')}
-                    </span>
-                    <span aria-hidden="true">·</span>
-                    <a
-                      href={`https://doi.org/${article.doi}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-mono text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:underline inline-flex items-center gap-1"
-                    >
-                      <span>doi:{article.doi}</span>
-                      <ExternalLink className="w-3 h-3 text-slate-400" />
-                    </a>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white leading-snug">
+                      {article.title}
+                    </h3>
+
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                      <span className="truncate max-w-sm">
+                        {article.authors.join('; ')}
+                      </span>
+                      <span aria-hidden="true">·</span>
+                      <a
+                        href={`https://doi.org/${article.doi}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:underline inline-flex items-center gap-1"
+                      >
+                        <span>doi:{article.doi}</span>
+                        <ExternalLink className="w-3 h-3 text-slate-400" />
+                      </a>
+                    </div>
                   </div>
                 </div>
 
-                {/* Right summary counter & collapse toggle */}
-                <div className="flex items-center gap-3 shrink-0">
+                {/* Right summary counter, Full-text AI action & collapse toggle */}
+                <div className="flex items-center gap-3 shrink-0 self-start">
+                  {onStartFullTextAudit && article.retractedCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => onStartFullTextAudit([article])}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 hover:bg-amber-100 text-xs font-semibold transition-colors cursor-pointer shadow-xs"
+                      title="Analyze this review article's full-text with AI against cited retracted studies"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Verify Full-Text (AI)</span>
+                    </button>
+                  )}
+
                   <div className="text-right">
                     <span className="text-xs font-medium block text-slate-500">
                       Flagged Citations

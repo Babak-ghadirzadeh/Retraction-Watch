@@ -1,6 +1,6 @@
 {
-  "summary":  "Architectural implementation plan for RetractScan: an academic journal editorial audit system that searches journals via Crossref/OpenAlex/PubMed, filters review and secondary studies using metadata and Gemini AI classification, extracts citations, checks Crossref and OpenAlex for retracted cited works, flags them interactively, and provides an editorial dashboard with PDF/CSV export and individual DOI/PMID audit tools.",
-  "updatedAt":  "2026-11-01T04:56:40.385716809Z",
-  "requestFeedback":  true,
-  "userFacing":  true
+  "summary": "Implementation plan for RetractScan updates:\n1. Streamlining FullTextAuditView by removing the text reader pane for a focused, clean layout showing data-contribution badges, sentence impacts, and COPE recommendations.\n2. Adding editorial notes input and dual-format report exporting (formatted printable PDF dossier and CSV export) containing the custom notes.\n3. Creating a minimalist, elegant Home page highlighting RetractScan capabilities and a 'Meet the Developers' section featuring Dr. Yousef Moradi (Umeå University) and Dr. Babak Ghadirzadeh (Kurdistan University of Medical Sciences).",
+  "updatedAt": "2026-11-03T14:54:05.974624972Z",
+  "requestFeedback": true,
+  "userFacing": true
 }
