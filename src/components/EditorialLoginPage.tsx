@@ -18,7 +18,6 @@ import { EditorProfile } from '../types/academic';
 import {
   launchGoogleAuth,
   launchOrcidAuth,
-  VERIFIED_EDITORIAL_ACCOUNTS,
   OAuthUserData,
 } from '../utils/oauthClient';
 
@@ -39,18 +38,16 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
 
   // Form states
-  const [email, setEmail] = useState(lastEditor?.email || 'a.campbell@lancet-editorial.org');
+  const [email, setEmail] = useState(lastEditor?.email || '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState(lastEditor?.name || '');
-  const [journal, setJournal] = useState(lastEditor?.journal || 'The Lancet');
-  const [role, setRole] = useState(lastEditor?.role || 'Senior Integrity Editor');
+  const [journal, setJournal] = useState(lastEditor?.journal || 'Academic Journal');
+  const [role, setRole] = useState(lastEditor?.role || 'Integrity Reviewer');
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  const [showDirectPicker, setShowDirectPicker] = useState(false);
 
   // Listen for OAuth popup completion (Google & ORCID)
   useEffect(() => {
@@ -165,24 +162,19 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
   });
   const [copiedCallback, setCopiedCallback] = useState<string | null>(null);
 
-  // Launch Google OAuth Popup directly & synchronously (prevents popup blockers)
+  // Launch Google OAuth Popup directly & synchronously
   const handleGoogleClick = () => {
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    const result = launchGoogleAuth({
+    launchGoogleAuth({
       mode,
       customClientId: customGoogleClientId.trim(),
       onSuccess: (data) => completeOAuthSession('google', data),
       onError: (err) => {
         setErrorMessage(err);
-        setShowDirectPicker(true);
       },
     });
-
-    if (result.popupBlocked) {
-      setShowDirectPicker(true);
-    }
   };
 
   // Launch ORCID OAuth Popup directly & synchronously
@@ -190,19 +182,14 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    const result = launchOrcidAuth({
+    launchOrcidAuth({
       mode,
       customClientId: customOrcidClientId.trim(),
       onSuccess: (data) => completeOAuthSession('orcid', data),
       onError: (err) => {
         setErrorMessage(err);
-        setShowDirectPicker(true);
       },
     });
-
-    if (result.popupBlocked) {
-      setShowDirectPicker(true);
-    }
   };
 
   const copyToClipboard = (text: string, label: string) => {
@@ -293,11 +280,7 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
 
     if (mode === 'signup') {
       if (!name.trim()) {
-        setErrorMessage('Please enter your full name & academic title.');
-        return;
-      }
-      if (!journal.trim()) {
-        setErrorMessage('Please specify your primary journal.');
+        setErrorMessage('Please enter your full name.');
         return;
       }
       if (password.length < 6) {
@@ -449,12 +432,12 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
           {/* Card Header & Mode Switcher */}
           <div className="p-6 sm:p-7 border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-center">
             <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">
-              {mode === 'signin' ? 'Journal Editor Sign In' : 'Create Editorial Account'}
+              {mode === 'signin' ? 'Sign In' : 'Create Account'}
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               {mode === 'signin'
-                ? 'Sign in to access your journal retraction audits & secondary literature reports'
-                : 'Register your editorial credentials to audit journals & cited literature'}
+                ? 'Sign in to access your journal retraction audits & reports'
+                : 'Sign up to audit literature and manage retraction reports'}
             </p>
 
             {/* Segment Toggle */}
@@ -538,81 +521,6 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
                 </span>
                 <span>{mode === 'signup' ? 'Sign up with ORCID' : 'Sign in with ORCID'}</span>
               </button>
-
-              {/* Quick Verified Account Selection Option */}
-              <div className="pt-0.5">
-                <button
-                  type="button"
-                  onClick={() => setShowDirectPicker(!showDirectPicker)}
-                  className="w-full flex items-center justify-between text-[11px] text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 py-1 px-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
-                >
-                  <span className="flex items-center gap-1.5 font-medium">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                    Verified Editorial Accounts
-                  </span>
-                  <span className="font-mono text-[10px] text-slate-400">
-                    {showDirectPicker ? '▲ Hide' : '▼ Quick Select'}
-                  </span>
-                </button>
-
-                {showDirectPicker && (
-                  <div className="mt-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-1.5 animate-in fade-in duration-150">
-                    <button
-                      type="button"
-                      onClick={() => completeOAuthSession('google', VERIFIED_EDITORIAL_ACCOUNTS.babak)}
-                      className="w-full text-left p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-750 hover:border-slate-400 dark:hover:border-slate-600 transition-colors cursor-pointer flex items-center justify-between"
-                    >
-                      <div>
-                        <div className="text-xs font-bold text-slate-900 dark:text-white">
-                          Babak Ghadirzadeh, M.D.
-                        </div>
-                        <div className="text-[10px] text-slate-500">
-                          The Lancet · Kurdistan Univ. of Medical Sciences
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                        Google
-                      </span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => completeOAuthSession('orcid', VERIFIED_EDITORIAL_ACCOUNTS.yousef)}
-                      className="w-full text-left p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-750 hover:border-slate-400 dark:hover:border-slate-600 transition-colors cursor-pointer flex items-center justify-between"
-                    >
-                      <div>
-                        <div className="text-xs font-bold text-slate-900 dark:text-white">
-                          Dr. Yousef Moradi, PhD
-                        </div>
-                        <div className="text-[10px] text-slate-500">
-                          Epidemiology · Umeå universitet, Sweden
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                        ORCID
-                      </span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => completeOAuthSession('google', VERIFIED_EDITORIAL_ACCOUNTS.arthur)}
-                      className="w-full text-left p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-750 hover:border-slate-400 dark:hover:border-slate-600 transition-colors cursor-pointer flex items-center justify-between"
-                    >
-                      <div>
-                        <div className="text-xs font-bold text-slate-900 dark:text-white">
-                          Dr. Arthur Campbell
-                        </div>
-                        <div className="text-[10px] text-slate-500">
-                          Senior Integrity Editor · The Lancet
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                        Google
-                      </span>
-                    </button>
-                  </div>
-                )}
-              </div>
 
               {/* OAuth Configuration & Redirect URIs Toggle */}
               <div className="pt-1">
@@ -751,47 +659,13 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                        Primary Journal
-                      </label>
-                      <div className="relative">
-                        <BookOpen className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                        <input
-                          type="text"
-                          value={journal}
-                          onChange={(e) => setJournal(e.target.value)}
-                          placeholder="The Lancet"
-                          className="w-full pl-9.5 pr-3.5 py-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-100"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                        Editorial Role
-                      </label>
-                      <div className="relative">
-                        <Briefcase className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                        <input
-                          type="text"
-                          value={role}
-                          onChange={(e) => setRole(e.target.value)}
-                          placeholder="Senior Integrity Editor"
-                          className="w-full pl-9.5 pr-3.5 py-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-100"
-                        />
-                      </div>
-                    </div>
-                  </div>
                 </>
               )}
 
               {/* Email Address */}
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  Editorial / Academic Email
+                  Email Address
                 </label>
                 <div className="relative">
                   <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
@@ -799,7 +673,7 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="editor@lancet-editorial.org"
+                    placeholder="name@organization.edu"
                     className="w-full pl-9.5 pr-3.5 py-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-100"
                     required
                   />
@@ -812,9 +686,6 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
                   <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                     Password
                   </label>
-                  {mode === 'signin' && (
-                    <span className="text-[10px] text-slate-400">Default demo: editorial2026</span>
-                  )}
                 </div>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
@@ -860,7 +731,7 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
                 ) : (
                   <>
                     <span>
-                      {mode === 'signin' ? 'Sign In & Enter Dashboard' : 'Create Account & Enter'}
+                      {mode === 'signin' ? 'Sign In' : 'Create Account'}
                     </span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </>
@@ -872,7 +743,7 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
             <div className="text-center text-xs text-slate-500 dark:text-slate-400 pt-1">
               {mode === 'signin' ? (
                 <span>
-                  Don't have an editorial account?{' '}
+                  Don't have an account?{' '}
                   <button
                     type="button"
                     onClick={() => {
@@ -887,7 +758,7 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
                 </span>
               ) : (
                 <span>
-                  Already registered an account?{' '}
+                  Already have an account?{' '}
                   <button
                     type="button"
                     onClick={() => {

@@ -3,25 +3,18 @@ import {
   X,
   ShieldCheck,
   UserCheck,
-  BookOpen,
   Mail,
-  Award,
   CheckCircle2,
   Lock,
   Eye,
   EyeOff,
-  Building2,
   LogOut,
-  ExternalLink,
-  Sparkles,
-  ArrowRight,
   AlertCircle,
 } from 'lucide-react';
 import { EditorProfile } from '../types/academic';
 import {
   launchGoogleAuth,
   launchOrcidAuth,
-  VERIFIED_EDITORIAL_ACCOUNTS,
   OAuthUserData,
 } from '../utils/oauthClient';
 
@@ -521,13 +514,6 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
                       <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
                         Password
                       </label>
-                      <button
-                        type="button"
-                        onClick={() => setPassword('editorial2026')}
-                        className="text-[11px] text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:underline cursor-pointer"
-                      >
-                        Use default demo pwd
-                      </button>
                     </div>
                     <div className="relative">
                       <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
@@ -567,7 +553,7 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
                     className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 disabled:opacity-60 rounded-xl shadow-xs transition-colors cursor-pointer"
                   >
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>{isSubmitting ? 'Authenticating...' : 'Sign In as Journal Editor'}</span>
+                    <span>{isSubmitting ? 'Authenticating...' : 'Sign In'}</span>
                   </button>
                 </form>
               )}
@@ -577,7 +563,7 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
                 <form onSubmit={handleEmailSignUp} className="space-y-3">
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Full Name & Academic Title
+                      Full Name
                     </label>
                     <div className="relative">
                       <UserCheck className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
@@ -586,7 +572,7 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
                         required
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        placeholder="e.g. Dr. Elena Rostova"
+                        placeholder="Dr. Jane Doe"
                         className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500 focus:border-slate-400 focus:outline-none"
                       />
                     </div>
@@ -594,7 +580,7 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Institutional Email Address
+                      Email Address
                     </label>
                     <div className="relative">
                       <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
@@ -603,80 +589,9 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="e.rostova@cochrane-evidence.org"
+                        placeholder="name@organization.edu"
                         className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500 focus:border-slate-400 focus:outline-none"
                       />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        Primary Journal
-                      </label>
-                      <div className="relative">
-                        <BookOpen className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                        <input
-                          type="text"
-                          required
-                          value={journal}
-                          onChange={(e) => setJournal(e.target.value)}
-                          placeholder="e.g. The Lancet"
-                          className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500 focus:border-slate-400 focus:outline-none"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        Editorial Role
-                      </label>
-                      <select
-                        value={role}
-                        onChange={(e) => setRole(e.target.value)}
-                        className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500 focus:border-slate-400 focus:outline-none"
-                      >
-                        <option value="Editor-in-Chief">Editor-in-Chief</option>
-                        <option value="Senior Integrity Editor">Senior Integrity Editor</option>
-                        <option value="Associate / Section Editor">Associate / Section Editor</option>
-                        <option value="Managing Editor">Managing Editor</option>
-                        <option value="Editorial Board Member">Editorial Board Member</option>
-                        <option value="Peer Review Coordinator">Peer Review Coordinator</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        ORCID iD (Optional)
-                      </label>
-                      <div className="relative">
-                        <Award className="w-4 h-4 text-[#A6CE39] absolute left-3 top-3" />
-                        <input
-                          type="text"
-                          value={orcid}
-                          onChange={(e) => setOrcid(e.target.value)}
-                          placeholder="0000-0003-4921-8842"
-                          className="w-full pl-9 pr-3 py-2 text-sm font-mono rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500 focus:border-slate-400 focus:outline-none"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        Institution / Affiliation
-                      </label>
-                      <div className="relative">
-                        <Building2 className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                        <input
-                          type="text"
-                          value={institution}
-                          onChange={(e) => setInstitution(e.target.value)}
-                          placeholder="Oxford University / NHS"
-                          className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500 focus:border-slate-400 focus:outline-none"
-                        />
-                      </div>
                     </div>
                   </div>
 
@@ -722,7 +637,7 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
                     className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 disabled:opacity-60 rounded-xl shadow-xs transition-colors cursor-pointer"
                   >
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>{isSubmitting ? 'Creating Editorial Profile...' : 'Complete Registration & Sign In'}</span>
+                    <span>{isSubmitting ? 'Creating Account...' : 'Create Account'}</span>
                   </button>
                 </form>
               )}

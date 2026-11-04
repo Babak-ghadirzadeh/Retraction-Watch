@@ -89,5 +89,15 @@
     "institution": "Department of Diagnostics and Intervention, Umeå University",
     "authProvider": "orcid",
     "createdAt": "2026-11-03T19:00:24.346Z"
+  },
+  {
+    "id": "editor-1793805198637-7502",
+    "name": "Dr. Alice Test",
+    "email": "alice@example.com",
+    "password": "mypassword123",
+    "journal": "Academic Journal",
+    "role": "Integrity Editor",
+    "authProvider": "email",
+    "createdAt": "2026-11-04T15:13:18.637Z"
   }
 ]

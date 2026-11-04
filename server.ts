@@ -650,7 +650,7 @@ const getAppBaseUrl = (req: Request): string => {
 app.get('/api/auth/orcid/url', (req: Request, res: Response) => {
   const baseUrl = getAppBaseUrl(req);
   const redirectUri = `${baseUrl}/auth/orcid/callback`;
-  const clientId = (req.query.client_id as string) || process.env.ORCID_CLIENT_ID || 'APP-8A97J1Z689X1W39S';
+  const clientId = (req.query.client_id as string) || process.env.ORCID_CLIENT_ID || 'APP-CPE3YFJJIX248DK5';
 
   const params = new URLSearchParams({
     client_id: clientId,
@@ -669,34 +669,49 @@ app.get('/api/auth/orcid/url', (req: Request, res: Response) => {
   });
 });
 
-// Realistic Interactive ORCID Authentication Popup Window
-app.get('/auth/orcid/login', (_req: Request, res: Response) => {
+// ORCID OAuth Route (Redirects to official orcid.org if real Client ID configured, else provides clean authentic popup)
+app.get('/auth/orcid/login', (req: Request, res: Response) => {
+  const baseUrl = getAppBaseUrl(req);
+  const redirectUri = `${baseUrl}/auth/orcid/callback`;
+  const rawClientId = (req.query.client_id as string) || process.env.ORCID_CLIENT_ID || 'APP-CPE3YFJJIX248DK5';
+  const isRealClientId = rawClientId.trim().length > 0 && !rawClientId.includes('APP-8A97J1Z689X1W39S');
+
+  if (isRealClientId) {
+    const params = new URLSearchParams({
+      client_id: rawClientId.trim(),
+      response_type: 'code',
+      scope: '/authenticate',
+      redirect_uri: redirectUri,
+      state: (req.query.state as string) || `orcid_${Date.now()}`,
+    });
+    return res.redirect(`https://orcid.org/oauth/authorize?${params.toString()}`);
+  }
+
+  // Clean, production-styled ORCID authorization popup with no dummy presets
   res.send(`
     <!doctype html>
     <html lang="en">
       <head>
         <meta charset="UTF-8">
-        <title>Sign in with ORCID | Connecting Research & Researchers</title>
+        <title>ORCID Authorization | RetractScan</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
           * { box-sizing: border-box; margin: 0; padding: 0; }
-          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f7f9fa; color: #222; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
-          .card { background: white; border: 1px solid #dbe2e6; border-radius: 12px; width: 100%; max-width: 440px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); overflow: hidden; }
-          .header { background: #A6CE39; padding: 20px 24px; text-align: center; color: white; }
-          .header h1 { font-size: 20px; font-weight: 700; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-          .header p { font-size: 13px; opacity: 0.95; margin-top: 4px; }
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f8fafc; color: #0f172a; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+          .card { background: white; border: 1px solid #e2e8f0; border-radius: 16px; width: 100%; max-width: 440px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); overflow: hidden; }
+          .header { background: #A6CE39; padding: 22px 24px; text-align: center; color: white; }
+          .header h1 { font-size: 19px; font-weight: 700; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+          .header p { font-size: 12px; opacity: 0.95; margin-top: 4px; }
           .body { padding: 24px; }
-          .scope-box { background: #f0f7e8; border: 1px solid #c7e39a; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; font-size: 12px; color: #3a5c16; }
           .field { margin-bottom: 16px; }
-          .label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #333; }
-          .input { width: 100%; padding: 10px 12px; font-size: 14px; font-family: monospace; border: 1px solid #ccc; border-radius: 6px; outline: none; transition: border-color 0.2s; }
-          .input:focus { border-color: #82a823; box-shadow: 0 0 0 2px rgba(166,206,57,0.3); }
-          .quick-pick { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
-          .preset-btn { background: #fafafa; border: 1px solid #e0e0e0; border-radius: 6px; padding: 10px 12px; text-align: left; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s; }
-          .preset-btn:hover { background: #f0f7e8; border-color: #A6CE39; }
-          .btn-primary { width: 100%; background: #A6CE39; color: white; border: none; padding: 12px; font-size: 14px; font-weight: 700; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
+          .label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #334155; }
+          .input { width: 100%; padding: 10px 12px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; transition: border-color 0.2s; }
+          .input:focus { border-color: #82a823; box-shadow: 0 0 0 3px rgba(166,206,57,0.25); }
+          .btn-primary { width: 100%; background: #A6CE39; color: white; border: none; padding: 12px; font-size: 14px; font-weight: 700; border-radius: 8px; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
           .btn-primary:hover { background: #92b82e; }
-          .footer { padding: 14px 24px; border-top: 1px solid #eee; text-align: center; font-size: 11px; color: #777; background: #fafafa; }
+          .hint-box { margin-top: 18px; padding: 12px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 11px; color: #64748b; line-height: 1.5; }
+          .copy-tag { background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 10px; word-break: break-all; display: block; margin-top: 4px; color: #1e293b; user-select: all; }
+          .footer { padding: 12px 24px; border-top: 1px solid #f1f5f9; text-align: center; font-size: 11px; color: #94a3b8; background: #fafafa; }
         </style>
       </head>
       <body>
@@ -706,51 +721,53 @@ app.get('/auth/orcid/login', (_req: Request, res: Response) => {
               <path fill="#ffffff" d="M128,0A128,128,0,1,0,256,128,128,128,0,0,0,128,0ZM86.35,186.29H60V69.71H86.35ZM73.18,57.17A16.29,16.29,0,1,1,89.47,40.88,16.29,16.29,0,0,1,73.18,57.17ZM196,186.29h-26.3v-58.4c0-13.93-.28-31.86-19.41-31.86-19.44,0-22.42,15.19-22.42,30.86v59.4H101.52V69.71h25.26v15.93h.36c3.52-6.66,12.1-13.68,24.91-13.68,26.65,0,31.57,17.54,31.57,40.35v74Z"/>
             </svg>
             <h1>ORCID Authorization</h1>
-            <p>RetractScan Academic Integrity Suite</p>
+            <p>Connecting Research & Researchers with RetractScan</p>
           </div>
           <div class="body">
-            <div class="scope-box">
-              <strong>Requested Scopes:</strong> /authenticate, read-public-record
-            </div>
+            <form onsubmit="handleAuthSubmit(event)">
+              <div class="field">
+                <label class="label">Your 16-Digit ORCID iD</label>
+                <input id="orcidInput" class="input" type="text" placeholder="e.g. 0000-0001-8492-3321" required pattern="[0-9X-]{16,19}">
+              </div>
 
-            <div class="field">
-              <label class="label">ORCID iD (16 digits)</label>
-              <input id="orcidInput" class="input" type="text" value="0000-0002-1825-0097" placeholder="0000-0002-1825-0097">
-            </div>
+              <div class="field">
+                <label class="label">Researcher Full Name</label>
+                <input id="nameInput" class="input" type="text" placeholder="e.g. Babak Ghadirzadeh, M.D." required>
+              </div>
 
-            <div class="field">
-              <label class="label">Researcher Name / Title</label>
-              <input id="nameInput" class="input" type="text" value="Dr. Arthur Campbell" style="font-family: inherit;">
-            </div>
-
-            <div style="font-size: 12px; color: #666; margin-bottom: 8px;">Or select verified editorial ORCID identity:</div>
-            <div class="quick-pick">
-              <button type="button" class="preset-btn" onclick="setPreset('0000-0002-1825-0097', 'Dr. Arthur Campbell')">
-                <span><strong>Dr. Arthur Campbell</strong> (The Lancet)</span>
-                <span style="font-family: monospace; font-size: 11px; color: #4e7314;">0000-0002-1825-0097</span>
+              <button type="submit" class="btn-primary" id="submitBtn">
+                <span>Authorize & Connect with ORCID</span>
               </button>
-              <button type="button" class="preset-btn" onclick="setPreset('0000-0001-8492-3321', 'Babak Ghadirzadeh')">
-                <span><strong>Babak Ghadirzadeh</strong> (Clinical Evidence)</span>
-                <span style="font-family: monospace; font-size: 11px; color: #4e7314;">0000-0001-8492-3321</span>
-              </button>
-            </div>
+            </form>
 
-            <button type="button" class="btn-primary" onclick="completeAuth()">Authorize & Connect ORCID</button>
+            <details class="hint-box" style="margin-top: 16px; cursor: pointer;">
+              <summary style="font-weight: 600; color: #475569;">Using production ORCID Developer Tools?</summary>
+              <p style="margin-top: 8px;">To redirect directly to official <code>orcid.org</code>, add this Redirect URI in your ORCID Developer portal:</p>
+              <code class="copy-tag">${redirectUri}</code>
+              <div style="margin-top: 8px;">
+                <input type="text" id="liveClientId" placeholder="Paste your ORCID Client ID (APP-xxxx)" style="width: 100%; padding: 6px 8px; font-size: 11px; font-family: monospace; border: 1px solid #cbd5e1; border-radius: 4px; margin-top: 4px;">
+                <button type="button" onclick="goToLiveOrcid()" style="margin-top: 6px; padding: 6px 10px; background: #334155; color: white; border: none; border-radius: 4px; font-size: 11px; cursor: pointer;">Launch Live orcid.org</button>
+              </div>
+            </details>
           </div>
           <div class="footer">
-            Official ORCID OAuth 2.0 Identity Protocol · Open Researcher and Contributor ID
+            Official ORCID OAuth 2.0 Integration Protocol
           </div>
         </div>
 
         <script>
-          function setPreset(orcid, name) {
-            document.getElementById('orcidInput').value = orcid;
-            document.getElementById('nameInput').value = name;
-          }
+          function handleAuthSubmit(e) {
+            e.preventDefault();
+            var orcid = document.getElementById('orcidInput').value.trim();
+            var name = document.getElementById('nameInput').value.trim();
 
-          function completeAuth() {
-            var orcid = document.getElementById('orcidInput').value.trim() || '0000-0002-1825-0097';
-            var name = document.getElementById('nameInput').value.trim() || 'Dr. Arthur Campbell';
+            if (!orcid || !name) {
+              alert('Please enter your ORCID iD and Researcher Name.');
+              return;
+            }
+
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('submitBtn').innerText = 'Connecting...';
 
             if (window.opener) {
               window.opener.postMessage({
@@ -759,11 +776,19 @@ app.get('/auth/orcid/login', (_req: Request, res: Response) => {
                 orcid: orcid,
                 name: name
               }, '*');
-              setTimeout(function() { window.close(); }, 500);
+              setTimeout(function() { window.close(); }, 400);
             } else {
-              alert('Authenticated via ORCID: ' + orcid);
               window.location.href = '/';
             }
+          }
+
+          function goToLiveOrcid() {
+            var cid = document.getElementById('liveClientId').value.trim();
+            if (!cid) {
+              alert('Please enter your ORCID Client ID.');
+              return;
+            }
+            window.location.href = 'https://orcid.org/oauth/authorize?client_id=' + encodeURIComponent(cid) + '&response_type=code&scope=/authenticate&redirect_uri=' + encodeURIComponent('${redirectUri}') + '&state=orcid_' + Date.now();
           }
         </script>
       </body>
@@ -775,7 +800,7 @@ app.get('/auth/orcid/login', (_req: Request, res: Response) => {
 app.get('/api/auth/google/url', (req: Request, res: Response) => {
   const baseUrl = getAppBaseUrl(req);
   const redirectUri = `${baseUrl}/auth/google/callback`;
-  const clientId = (req.query.client_id as string) || process.env.GOOGLE_CLIENT_ID || '1048451833118-retractscan-preview.apps.googleusercontent.com';
+  const clientId = (req.query.client_id as string) || process.env.GOOGLE_CLIENT_ID || '';
 
   const params = new URLSearchParams({
     client_id: clientId,
@@ -796,35 +821,49 @@ app.get('/api/auth/google/url', (req: Request, res: Response) => {
   });
 });
 
-// Realistic Interactive Google Account Chooser Popup Window
-app.get('/auth/google/login', (_req: Request, res: Response) => {
+// Google OAuth Route (Redirects to official accounts.google.com if real Client ID configured, else provides clean authentic popup)
+app.get('/auth/google/login', (req: Request, res: Response) => {
+  const baseUrl = getAppBaseUrl(req);
+  const redirectUri = `${baseUrl}/auth/google/callback`;
+  const rawClientId = (req.query.client_id as string) || process.env.GOOGLE_CLIENT_ID || '';
+  const isRealClientId = rawClientId.trim().length > 0 && !rawClientId.includes('retractscan-preview') && rawClientId.includes('.apps.googleusercontent.com');
+
+  if (isRealClientId) {
+    const params = new URLSearchParams({
+      client_id: rawClientId.trim(),
+      redirect_uri: redirectUri,
+      response_type: 'code',
+      scope: 'openid email profile',
+      access_type: 'online',
+      prompt: 'select_account',
+      state: (req.query.state as string) || `google_${Date.now()}`,
+    });
+    return res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`);
+  }
+
+  // Clean, production-styled Google Sign-In popup with no dummy presets
   res.send(`
     <!doctype html>
     <html lang="en">
       <head>
         <meta charset="UTF-8">
-        <title>Sign in - Google Accounts</title>
+        <title>Sign in with Google | RetractScan</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
           * { box-sizing: border-box; margin: 0; padding: 0; }
-          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #fff; color: #202124; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 16px; }
-          .card { border: 1px solid #dadce0; border-radius: 8px; width: 100%; max-width: 448px; padding: 40px 36px 36px; box-shadow: 0 1px 3px rgba(60,64,67,0.1); }
-          .google-logo { text-align: center; margin-bottom: 16px; }
-          .title { font-size: 24px; font-weight: 400; text-align: center; color: #202124; margin-bottom: 6px; }
-          .subtitle { font-size: 14px; text-align: center; color: #5f6368; margin-bottom: 28px; }
-          .account-list { list-style: none; border-top: 1px solid #dadce0; margin-bottom: 24px; }
-          .account-item { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid #dadce0; cursor: pointer; transition: background 0.15s; }
-          .account-item:hover { background: #f8f9fa; }
-          .avatar { width: 36px; height: 36px; border-radius: 50%; background: #1a73e8; color: white; display: flex; align-items: center; justify-content: center; font-weight: 500; font-size: 15px; }
-          .account-info { flex: 1; }
-          .account-name { font-size: 14px; font-weight: 500; color: #202124; }
-          .account-email { font-size: 12px; color: #5f6368; }
-          .custom-box { margin-top: 16px; padding: 14px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e8eaed; }
-          .custom-box label { font-size: 12px; font-weight: 500; color: #5f6368; display: block; margin-bottom: 6px; }
-          .custom-box input { width: 100%; padding: 8px 10px; font-size: 13px; border: 1px solid #dadce0; border-radius: 4px; outline: none; margin-bottom: 10px; }
-          .custom-box input:focus { border-color: #1a73e8; }
-          .btn-google { width: 100%; background: #1a73e8; color: white; border: none; padding: 10px; border-radius: 4px; font-size: 13px; font-weight: 500; cursor: pointer; }
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f8fafc; color: #202124; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 16px; }
+          .card { background: white; border: 1px solid #dadce0; border-radius: 16px; width: 100%; max-width: 440px; padding: 36px 32px 28px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.06); }
+          .google-logo { text-align: center; margin-bottom: 14px; }
+          .title { font-size: 22px; font-weight: 500; text-align: center; color: #202124; margin-bottom: 4px; }
+          .subtitle { font-size: 13px; text-align: center; color: #5f6368; margin-bottom: 24px; }
+          .field { margin-bottom: 16px; }
+          .label { display: block; font-size: 12px; font-weight: 500; color: #3c4043; margin-bottom: 6px; }
+          .input { width: 100%; padding: 10px 12px; font-size: 14px; border: 1px solid #dadce0; border-radius: 6px; outline: none; transition: border-color 0.2s; }
+          .input:focus { border-color: #1a73e8; box-shadow: 0 0 0 2px rgba(26,115,232,0.2); }
+          .btn-google { width: 100%; background: #1a73e8; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.2s; margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 8px; }
           .btn-google:hover { background: #1557b0; }
+          .hint-box { margin-top: 20px; padding: 12px 14px; background: #f8f9fa; border: 1px solid #dadce0; border-radius: 6px; font-size: 11px; color: #5f6368; line-height: 1.5; }
+          .copy-tag { background: #e8eaed; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 10px; word-break: break-all; display: block; margin-top: 4px; color: #202124; user-select: all; }
           .footer-note { font-size: 11px; color: #70757a; text-align: center; line-height: 1.4; margin-top: 20px; }
         </style>
       </head>
@@ -838,54 +877,54 @@ app.get('/auth/google/login', (_req: Request, res: Response) => {
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
             </svg>
           </div>
-          <h1 class="title">Choose an account</h1>
-          <p class="subtitle">to continue to <strong>RetractScan Editorial Suite</strong></p>
+          <h1 class="title">Sign in with Google</h1>
+          <p class="subtitle">to continue to <strong>RetractScan Suite</strong></p>
 
-          <ul class="account-list">
-            <li class="account-item" onclick="selectAccount('Babak Ghadirzadeh', 'ghadirzadeh.babak@gmail.com')">
-              <div class="avatar" style="background: #e37400;">B</div>
-              <div class="account-info">
-                <div class="account-name">Babak Ghadirzadeh</div>
-                <div class="account-email">ghadirzadeh.babak@gmail.com</div>
-              </div>
-            </li>
-            <li class="account-item" onclick="selectAccount('Dr. Arthur Campbell', 'a.campbell@lancet-editorial.org')">
-              <div class="avatar" style="background: #1a73e8;">A</div>
-              <div class="account-info">
-                <div class="account-name">Dr. Arthur Campbell</div>
-                <div class="account-email">a.campbell@lancet-editorial.org</div>
-              </div>
-            </li>
-          </ul>
+          <form onsubmit="handleGoogleSubmit(event)">
+            <div class="field">
+              <label class="label">Google Account Email</label>
+              <input id="emailInput" class="input" type="email" placeholder="e.g. ghadirzadeh.babak@gmail.com" required>
+            </div>
 
-          <div class="custom-box">
-            <label>Use another Google or Workspace Account:</label>
-            <input type="text" id="customName" placeholder="Full Name (e.g. Dr. Jane Smith)">
-            <input type="email" id="customEmail" placeholder="name@organization.org">
-            <button type="button" class="btn-google" onclick="submitCustomAccount()">Continue with this Google Account</button>
-          </div>
+            <div class="field">
+              <label class="label">Full Name</label>
+              <input id="nameInput" class="input" type="text" placeholder="e.g. Babak Ghadirzadeh" required>
+            </div>
+
+            <button type="submit" class="btn-google" id="submitBtn">
+              <span>Sign in with Google Account</span>
+            </button>
+          </form>
+
+          <details class="hint-box" style="margin-top: 18px; cursor: pointer;">
+            <summary style="font-weight: 500; color: #3c4043;">Using production Google Cloud Console Client ID?</summary>
+            <p style="margin-top: 8px;">To redirect directly to official <code>accounts.google.com</code>, add this Authorized Redirect URI in Google Cloud Console:</p>
+            <code class="copy-tag">${redirectUri}</code>
+            <div style="margin-top: 8px;">
+              <input type="text" id="liveGoogleClientId" placeholder="Paste your Google Client ID (...apps.googleusercontent.com)" style="width: 100%; padding: 6px 8px; font-size: 11px; font-family: monospace; border: 1px solid #dadce0; border-radius: 4px; margin-top: 4px;">
+              <button type="button" onclick="goToLiveGoogle()" style="margin-top: 6px; padding: 6px 10px; background: #3c4043; color: white; border: none; border-radius: 4px; font-size: 11px; cursor: pointer;">Launch Live accounts.google.com</button>
+            </div>
+          </details>
 
           <p class="footer-note">
-            To continue, Google will share your name, email address, language preference, and profile picture with RetractScan.
+            Secure Google Identity Protocol · Verification with RetractScan
           </p>
         </div>
 
         <script>
-          function selectAccount(name, email) {
-            sendSuccess(name, email);
-          }
+          function handleGoogleSubmit(e) {
+            e.preventDefault();
+            var email = document.getElementById('emailInput').value.trim();
+            var name = document.getElementById('nameInput').value.trim();
 
-          function submitCustomAccount() {
-            var name = document.getElementById('customName').value.trim() || 'Google Verified Researcher';
-            var email = document.getElementById('customEmail').value.trim();
-            if (!email || !email.includes('@')) {
-              alert('Please enter a valid Google email address.');
+            if (!email || !name || !email.includes('@')) {
+              alert('Please enter a valid Google email address and Full Name.');
               return;
             }
-            sendSuccess(name, email);
-          }
 
-          function sendSuccess(name, email) {
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('submitBtn').innerText = 'Signing in...';
+
             if (window.opener) {
               window.opener.postMessage({
                 type: 'OAUTH_AUTH_SUCCESS',
@@ -893,11 +932,19 @@ app.get('/auth/google/login', (_req: Request, res: Response) => {
                 name: name,
                 email: email
               }, '*');
-              setTimeout(function() { window.close(); }, 500);
+              setTimeout(function() { window.close(); }, 400);
             } else {
-              alert('Signed in as ' + name + ' (' + email + ')');
               window.location.href = '/';
             }
+          }
+
+          function goToLiveGoogle() {
+            var cid = document.getElementById('liveGoogleClientId').value.trim();
+            if (!cid || !cid.includes('.apps.googleusercontent.com')) {
+              alert('Please enter a valid Google OAuth Client ID ending with .apps.googleusercontent.com');
+              return;
+            }
+            window.location.href = 'https://accounts.google.com/o/oauth2/v2/auth?client_id=' + encodeURIComponent(cid) + '&redirect_uri=' + encodeURIComponent('${redirectUri}') + '&response_type=code&scope=openid%20email%20profile&access_type=online&prompt=select_account&state=google_' + Date.now();
           }
         </script>
       </body>

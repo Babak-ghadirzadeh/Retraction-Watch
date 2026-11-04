@@ -1,6 +1,6 @@
 {
-  "summary": "Implementation plan for RetractScan updates:\n1. Streamlining FullTextAuditView by removing the text reader pane for a focused, clean layout showing data-contribution badges, sentence impacts, and COPE recommendations.\n2. Adding editorial notes input and dual-format report exporting (formatted printable PDF dossier and CSV export) containing the custom notes.\n3. Creating a minimalist, elegant Home page highlighting RetractScan capabilities and a 'Meet the Developers' section featuring Dr. Yousef Moradi (Umeå University) and Dr. Babak Ghadirzadeh (Kurdistan University of Medical Sciences).",
-  "updatedAt": "2026-11-03T14:54:05.974624972Z",
+  "summary": "Clean up the Sign In and Sign Up page by removing all preset and verified editorial account buttons, implementing standard email/password forms (Name, Email, Password for Sign Up; Email, Password for Sign In), and configuring official Google and ORCID popup OAuth redirect flows that navigate to the provider and return authenticated to the user's account.",
+  "updatedAt": "2026-11-04T15:03:00.922799861Z",
   "requestFeedback": true,
   "userFacing": true
 }
