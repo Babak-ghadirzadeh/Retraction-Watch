@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { EditorialLoginPage } from './components/EditorialLoginPage';
 import { EditorAuthModal } from './components/EditorAuthModal';
@@ -41,12 +41,12 @@ export default function App() {
       // ignore
     }
     return {
-      name: 'Dr. Arthur Campbell',
-      email: 'a.campbell@lancet-editorial.org',
-      journal: 'The Lancet',
-      role: 'Senior Integrity Editor',
+      name: '',
+      email: '',
+      journal: '',
+      role: 'Integrity Editor',
       authProvider: 'email',
-      institution: 'Lancet Editorial Board',
+      institution: '',
       isLoggedIn: false,
     };
   });
@@ -71,7 +71,41 @@ export default function App() {
   const [auditResults, setAuditResults] = useState<AuditedArticleResult[] | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Handle navigation tab changes with authentication gating for audit tools
+  // Check URL parameters for direct OAuth redirect completion (used by mobile devices without popup opener)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const oauthProvider = searchParams.get('oauth_login_provider');
+      if (oauthProvider === 'orcid' || oauthProvider === 'google') {
+        const orcid = searchParams.get('orcid') || '';
+        const email = searchParams.get('email') || (oauthProvider === 'orcid' ? `orcid-${orcid.replace(/[^0-9]/g, '').slice(-4)}@academic-orcid.org` : '');
+        const name = searchParams.get('name') || (oauthProvider === 'orcid' ? 'Dr. Arthur Campbell' : 'Google Verified Editor');
+
+        const newProfile: EditorProfile = {
+          name,
+          email,
+          orcid: orcid || undefined,
+          journal: 'The Lancet',
+          role: 'Senior Integrity Editor',
+          authProvider: oauthProvider,
+          institution: oauthProvider === 'orcid' ? 'ORCID Verified Researcher' : 'Google Identity Services',
+          isLoggedIn: true,
+        };
+
+        setEditor(newProfile);
+        localStorage.setItem(STORAGE_KEY_EDITOR, JSON.stringify(newProfile));
+        setIsSigningIn(false);
+        setActiveTab('journal');
+        showToast(`Welcome, ${name}! Signed in via ${oauthProvider.toUpperCase()}.`);
+
+        // Clean query parameters from URL address bar without reloading
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    } catch (e) {
+      console.warn('OAuth URL params parse warning:', e);
+    }
+  }, []);
   const handleTabChange = (tab: 'home' | 'journal' | 'single' | 'history' | 'fulltext') => {
     if (tab === 'home') {
       setActiveTab('home');

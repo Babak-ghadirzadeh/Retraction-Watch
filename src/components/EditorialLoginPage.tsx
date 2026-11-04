@@ -37,19 +37,39 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
   // Mode: either 'signin' or 'signup'
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
 
-  // Form states
-  const [email, setEmail] = useState(lastEditor?.email || '');
+  // Form states - always empty by default for clean sign in & sign up
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [name, setName] = useState(lastEditor?.name || '');
-  const [journal, setJournal] = useState(lastEditor?.journal || 'Academic Journal');
-  const [role, setRole] = useState(lastEditor?.role || 'Integrity Reviewer');
+  const [name, setName] = useState('');
+  const [journal, setJournal] = useState('Academic Journal');
+  const [role, setRole] = useState('Integrity Reviewer');
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Listen for OAuth popup completion (Google & ORCID)
+  // Clear all form fields on component mount
+  useEffect(() => {
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setName('');
+    setErrorMessage(null);
+    setSuccessMessage(null);
+  }, []);
+
+  const handleSwitchMode = (newMode: 'signin' | 'signup') => {
+    setMode(newMode);
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setName('');
+    setErrorMessage(null);
+    setSuccessMessage(null);
+  };
+
+  // Listen for OAuth popup completion (Google & ORCID) via postMessage and localStorage
   useEffect(() => {
     const handleOAuthMessage = (event: MessageEvent) => {
       const origin = event.origin;
@@ -79,8 +99,32 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
       }
     };
 
+    // Cross-tab and mobile storage event listener
+    const handleStorageEvent = (event: StorageEvent) => {
+      if (event.key === 'retractscan_oauth_complete' && event.newValue) {
+        try {
+          const parsed = JSON.parse(event.newValue);
+          if (parsed?.type === 'OAUTH_AUTH_SUCCESS') {
+            const provider = parsed.provider || 'google';
+            completeOAuthSession(provider, {
+              name: parsed.name,
+              email: parsed.email,
+              orcid: parsed.orcid,
+              journal: parsed.journal,
+              role: parsed.role,
+              institution: parsed.institution,
+            });
+          }
+        } catch (e) {}
+      }
+    };
+
     window.addEventListener('message', handleOAuthMessage);
-    return () => window.removeEventListener('message', handleOAuthMessage);
+    window.addEventListener('storage', handleStorageEvent);
+    return () => {
+      window.removeEventListener('message', handleOAuthMessage);
+      window.removeEventListener('storage', handleStorageEvent);
+    };
   }, [mode]);
 
   // Complete OAuth login session
@@ -160,16 +204,37 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
   const [customOrcidClientId, setCustomOrcidClientId] = useState(() => {
     return localStorage.getItem('retractscan_custom_orcid_client_id') || '';
   });
+  const [redirectUriMode, setRedirectUriMode] = useState<'auto' | 'dev' | 'custom'>(() => {
+    return (localStorage.getItem('retractscan_redirect_uri_mode') as 'auto' | 'dev' | 'custom') || 'auto';
+  });
+  const [customRedirectUriInput, setCustomRedirectUriInput] = useState(() => {
+    return localStorage.getItem('retractscan_custom_redirect_uri') || '';
+  });
   const [copiedCallback, setCopiedCallback] = useState<string | null>(null);
+
+  const LAPTOP_DEV_BASE = 'https://ais-dev-dzwyolr2chobabko7tzgp3-45122006777.europe-west2.run.app';
+
+  const getActiveRedirectUri = (provider: 'google' | 'orcid'): string | undefined => {
+    if (redirectUriMode === 'dev') {
+      return `${LAPTOP_DEV_BASE}/auth/${provider}/callback`;
+    }
+    if (redirectUriMode === 'custom' && customRedirectUriInput.trim()) {
+      return customRedirectUriInput.trim();
+    }
+    return undefined; // Default auto-resolves to current device origin
+  };
 
   // Launch Google OAuth Popup directly & synchronously
   const handleGoogleClick = () => {
     setErrorMessage(null);
     setSuccessMessage(null);
 
+    const redirectUri = getActiveRedirectUri('google');
+
     launchGoogleAuth({
       mode,
       customClientId: customGoogleClientId.trim(),
+      customRedirectUri: redirectUri,
       onSuccess: (data) => completeOAuthSession('google', data),
       onError: (err) => {
         setErrorMessage(err);
@@ -182,9 +247,12 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
     setErrorMessage(null);
     setSuccessMessage(null);
 
+    const redirectUri = getActiveRedirectUri('orcid');
+
     launchOrcidAuth({
       mode,
       customClientId: customOrcidClientId.trim(),
+      customRedirectUri: redirectUri,
       onSuccess: (data) => completeOAuthSession('orcid', data),
       onError: (err) => {
         setErrorMessage(err);
@@ -444,11 +512,7 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
             <div className="mt-5 grid grid-cols-2 p-1 bg-slate-200/80 dark:bg-slate-800 rounded-xl text-xs font-semibold">
               <button
                 type="button"
-                onClick={() => {
-                  setMode('signin');
-                  setErrorMessage(null);
-                  setSuccessMessage(null);
-                }}
+                onClick={() => handleSwitchMode('signin')}
                 className={`py-2 px-3 rounded-lg transition-all cursor-pointer ${
                   mode === 'signin'
                     ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs font-bold'
@@ -459,11 +523,7 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setMode('signup');
-                  setErrorMessage(null);
-                  setSuccessMessage(null);
-                }}
+                onClick={() => handleSwitchMode('signup')}
                 className={`py-2 px-3 rounded-lg transition-all cursor-pointer ${
                   mode === 'signup'
                     ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs font-bold'
@@ -539,40 +599,89 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
                 </button>
 
                 {showOAuthDetails && (
-                  <div className="mt-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-left space-y-2.5 text-[11px]">
-                    <div>
-                      <span className="font-semibold text-slate-700 dark:text-slate-300 block mb-0.5">
-                        Google Callback Redirect URI:
-                      </span>
-                      <div className="flex items-center gap-1">
-                        <code className="flex-1 bg-white dark:bg-slate-900 px-2 py-1 rounded border border-slate-200 dark:border-slate-700 font-mono text-[10px] text-slate-700 dark:text-slate-300 break-all select-all">
-                          {typeof window !== 'undefined' ? `${window.location.origin}/auth/google/callback` : '/auth/google/callback'}
-                        </code>
-                        <button
-                          type="button"
-                          onClick={() => copyToClipboard(typeof window !== 'undefined' ? `${window.location.origin}/auth/google/callback` : '/auth/google/callback', 'google')}
-                          className="px-2 py-1 rounded bg-slate-200 dark:bg-slate-700 text-[10px] font-medium hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors shrink-0"
-                        >
-                          {copiedCallback === 'google' ? 'Copied!' : 'Copy'}
-                        </button>
+                  <div className="mt-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-left space-y-3 text-[11px]">
+                    <div className="p-2.5 rounded-lg bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/60 text-amber-900 dark:text-amber-200 text-[10px] leading-relaxed">
+                      <p className="font-semibold mb-1">Fixing "redirect_uri does not match" & "redirect_uri_mismatch":</p>
+                      <p>
+                        ORCID and Google reject requests if the current device URL isn't in their authorized list. You can either <strong>add the Callback URIs below to your Developer consoles</strong>, or select <strong>"Use Laptop Registered Callback"</strong> to sign in immediately using the URL already registered from your laptop!
+                      </p>
+                    </div>
+
+                    {/* Redirect URI Strategy Selector */}
+                    <div className="space-y-1.5 pt-1">
+                      <label className="text-[10px] font-semibold text-slate-700 dark:text-slate-300 block">
+                        Callback Routing Mode:
+                      </label>
+                      <div className="space-y-1">
+                        <label className="flex items-center gap-2 cursor-pointer text-[10.5px] text-slate-700 dark:text-slate-300">
+                          <input
+                            type="radio"
+                            name="redirectUriMode"
+                            checked={redirectUriMode === 'auto'}
+                            onChange={() => {
+                              setRedirectUriMode('auto');
+                              localStorage.setItem('retractscan_redirect_uri_mode', 'auto');
+                            }}
+                            className="text-emerald-600 focus:ring-emerald-500 h-3.5 w-3.5"
+                          />
+                          <span>Current Device URL ({typeof window !== 'undefined' ? window.location.host : 'Current Origin'})</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer text-[10.5px] text-slate-700 dark:text-slate-300">
+                          <input
+                            type="radio"
+                            name="redirectUriMode"
+                            checked={redirectUriMode === 'dev'}
+                            onChange={() => {
+                              setRedirectUriMode('dev');
+                              localStorage.setItem('retractscan_redirect_uri_mode', 'dev');
+                            }}
+                            className="text-emerald-600 focus:ring-emerald-500 h-3.5 w-3.5"
+                          />
+                          <span>Use Laptop Registered Callback (<strong>ais-dev</strong> URL already approved)</span>
+                        </label>
                       </div>
                     </div>
 
-                    <div>
-                      <span className="font-semibold text-slate-700 dark:text-slate-300 block mb-0.5">
-                        ORCID Callback Redirect URI:
-                      </span>
-                      <div className="flex items-center gap-1">
-                        <code className="flex-1 bg-white dark:bg-slate-900 px-2 py-1 rounded border border-slate-200 dark:border-slate-700 font-mono text-[10px] text-slate-700 dark:text-slate-300 break-all select-all">
-                          {typeof window !== 'undefined' ? `${window.location.origin}/auth/orcid/callback` : '/auth/orcid/callback'}
-                        </code>
-                        <button
-                          type="button"
-                          onClick={() => copyToClipboard(typeof window !== 'undefined' ? `${window.location.origin}/auth/orcid/callback` : '/auth/orcid/callback', 'orcid')}
-                          className="px-2 py-1 rounded bg-slate-200 dark:bg-slate-700 text-[10px] font-medium hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors shrink-0"
-                        >
-                          {copiedCallback === 'orcid' ? 'Copied!' : 'Copy'}
-                        </button>
+                    {/* Current device URIs */}
+                    <div className="border-t border-slate-200 dark:border-slate-700 pt-2 space-y-2">
+                      <div>
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="font-semibold text-slate-700 dark:text-slate-300">
+                            Current Device ORCID Callback URI:
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <code className="flex-1 bg-white dark:bg-slate-900 px-2 py-1 rounded border border-slate-200 dark:border-slate-700 font-mono text-[10px] text-slate-700 dark:text-slate-300 break-all select-all">
+                            {typeof window !== 'undefined' ? `${window.location.origin}/auth/orcid/callback` : '/auth/orcid/callback'}
+                          </code>
+                          <button
+                            type="button"
+                            onClick={() => copyToClipboard(typeof window !== 'undefined' ? `${window.location.origin}/auth/orcid/callback` : '/auth/orcid/callback', 'orcid')}
+                            className="px-2 py-1 rounded bg-slate-200 dark:bg-slate-700 text-[10px] font-medium hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors shrink-0"
+                          >
+                            {copiedCallback === 'orcid' ? 'Copied!' : 'Copy'}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="font-semibold text-slate-700 dark:text-slate-300">
+                            Current Device Google Callback URI:
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <code className="flex-1 bg-white dark:bg-slate-900 px-2 py-1 rounded border border-slate-200 dark:border-slate-700 font-mono text-[10px] text-slate-700 dark:text-slate-300 break-all select-all">
+                            {typeof window !== 'undefined' ? `${window.location.origin}/auth/google/callback` : '/auth/google/callback'}
+                          </code>
+                          <button
+                            type="button"
+                            onClick={() => copyToClipboard(typeof window !== 'undefined' ? `${window.location.origin}/auth/google/callback` : '/auth/google/callback', 'google')}
+                            className="px-2 py-1 rounded bg-slate-200 dark:bg-slate-700 text-[10px] font-medium hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors shrink-0"
+                          >
+                            {copiedCallback === 'google' ? 'Copied!' : 'Copy'}
+                          </button>
+                        </div>
                       </div>
                     </div>
 
@@ -594,7 +703,7 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
                       </div>
                       <div>
                         <label className="text-[10px] text-slate-500 dark:text-slate-400 block mb-1">
-                          Custom ORCID Client ID (Optional):
+                          Custom ORCID Client ID (Default: APP-CPE3YFJJIX248DK5):
                         </label>
                         <input
                           type="text"
@@ -603,7 +712,7 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
                             setCustomOrcidClientId(e.target.value);
                             localStorage.setItem('retractscan_custom_orcid_client_id', e.target.value);
                           }}
-                          placeholder="e.g. APP-8A97J1Z689X1W39S"
+                          placeholder="e.g. APP-CPE3YFJJIX248DK5"
                           className="w-full text-[11px] px-2 py-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-mono"
                         />
                       </div>
@@ -652,7 +761,7 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        placeholder="Dr. Arthur Campbell"
+                        placeholder="e.g. Dr. Jane Smith"
                         className="w-full pl-9.5 pr-3.5 py-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-100"
                         required
                       />
@@ -746,11 +855,7 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
                   Don't have an account?{' '}
                   <button
                     type="button"
-                    onClick={() => {
-                      setMode('signup');
-                      setErrorMessage(null);
-                      setSuccessMessage(null);
-                    }}
+                    onClick={() => handleSwitchMode('signup')}
                     className="text-slate-900 dark:text-white font-semibold underline hover:no-underline cursor-pointer"
                   >
                     Sign up with email
@@ -761,11 +866,7 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
                   Already have an account?{' '}
                   <button
                     type="button"
-                    onClick={() => {
-                      setMode('signin');
-                      setErrorMessage(null);
-                      setSuccessMessage(null);
-                    }}
+                    onClick={() => handleSwitchMode('signin')}
                     className="text-slate-900 dark:text-white font-semibold underline hover:no-underline cursor-pointer"
                   >
                     Sign in with email

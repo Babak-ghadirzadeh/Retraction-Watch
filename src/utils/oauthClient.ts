@@ -17,6 +17,7 @@ export interface OAuthUserData {
 export interface LaunchOAuthOptions {
   mode: 'signin' | 'signup';
   customClientId?: string;
+  customRedirectUri?: string;
   onSuccess: (data: OAuthUserData) => void;
   onError: (errorMsg: string) => void;
 }
@@ -29,7 +30,7 @@ export const DEFAULT_ORCID_CLIENT_ID = 'APP-CPE3YFJJIX248DK5';
  * Launch Google OAuth 2.0 Redirect in Popup
  */
 export function launchGoogleAuth(options: LaunchOAuthOptions): { popupBlocked: boolean } {
-  const { mode, customClientId, onError } = options;
+  const { mode, customClientId, customRedirectUri, onError } = options;
 
   // Open popup window immediately inside user gesture to prevent browser blocking
   const popup = window.open(
@@ -45,9 +46,10 @@ export function launchGoogleAuth(options: LaunchOAuthOptions): { popupBlocked: b
 
   try {
     const origin = window.location.origin;
-    const cleanId = (customClientId || '').trim();
+    const cleanId = (customClientId || DEFAULT_GOOGLE_CLIENT_ID).trim();
     const clientIdParam = cleanId ? `&client_id=${encodeURIComponent(cleanId)}` : '';
-    popup.location.href = `${origin}/auth/google/login?mode=${mode}${clientIdParam}`;
+    const redirectParam = customRedirectUri?.trim() ? `&redirect_uri=${encodeURIComponent(customRedirectUri.trim())}` : '';
+    popup.location.href = `${origin}/auth/google/login?mode=${mode}&origin=${encodeURIComponent(origin)}${clientIdParam}${redirectParam}`;
   } catch (err: any) {
     console.error('Failed to redirect popup to Google OAuth:', err);
     onError('Unable to initiate Google OAuth redirection.');
@@ -60,7 +62,7 @@ export function launchGoogleAuth(options: LaunchOAuthOptions): { popupBlocked: b
  * Launch ORCID OAuth 2.0 Redirect in Popup
  */
 export function launchOrcidAuth(options: LaunchOAuthOptions): { popupBlocked: boolean } {
-  const { mode, customClientId, onError } = options;
+  const { mode, customClientId, customRedirectUri, onError } = options;
 
   // Open popup window immediately inside user gesture
   const popup = window.open(
@@ -76,9 +78,10 @@ export function launchOrcidAuth(options: LaunchOAuthOptions): { popupBlocked: bo
 
   try {
     const origin = window.location.origin;
-    const cleanId = (customClientId || '').trim();
+    const cleanId = (customClientId || DEFAULT_ORCID_CLIENT_ID).trim();
     const clientIdParam = cleanId ? `&client_id=${encodeURIComponent(cleanId)}` : '';
-    popup.location.href = `${origin}/auth/orcid/login?mode=${mode}${clientIdParam}`;
+    const redirectParam = customRedirectUri?.trim() ? `&redirect_uri=${encodeURIComponent(customRedirectUri.trim())}` : '';
+    popup.location.href = `${origin}/auth/orcid/login?mode=${mode}&origin=${encodeURIComponent(origin)}${clientIdParam}${redirectParam}`;
   } catch (err: any) {
     console.error('Failed to redirect popup to ORCID OAuth:', err);
     onError('Unable to initiate ORCID OAuth redirection.');

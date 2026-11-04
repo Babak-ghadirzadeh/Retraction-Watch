@@ -60,12 +60,12 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
       setErrorMessage(null);
       setSuccessMessage(null);
       setIsEditingExisting(false);
-      setName(editor.name || '');
-      setEmail(editor.email || '');
-      setJournal(editor.journal || 'The Lancet');
-      setRole(editor.role || 'Senior Integrity Editor');
-      setOrcid(editor.orcid || '');
-      setInstitution(editor.institution || '');
+      setName(editor.isLoggedIn ? (editor.name || '') : '');
+      setEmail(editor.isLoggedIn ? (editor.email || '') : '');
+      setJournal(editor.isLoggedIn ? (editor.journal || 'The Lancet') : 'The Lancet');
+      setRole(editor.isLoggedIn ? (editor.role || 'Senior Integrity Editor') : 'Senior Integrity Editor');
+      setOrcid(editor.isLoggedIn ? (editor.orcid || '') : '');
+      setInstitution(editor.isLoggedIn ? (editor.institution || '') : '');
       setPassword('');
       setConfirmPassword('');
     }
@@ -100,8 +100,32 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
       }
     };
 
+    // Cross-tab and mobile storage event listener
+    const handleStorageEvent = (event: StorageEvent) => {
+      if (event.key === 'retractscan_oauth_complete' && event.newValue) {
+        try {
+          const parsed = JSON.parse(event.newValue);
+          if (parsed?.type === 'OAUTH_AUTH_SUCCESS') {
+            const provider = parsed.provider || 'google';
+            completeOAuthSession(provider, {
+              name: parsed.name,
+              email: parsed.email,
+              orcid: parsed.orcid,
+              journal: parsed.journal,
+              role: parsed.role,
+              institution: parsed.institution,
+            });
+          }
+        } catch (e) {}
+      }
+    };
+
     window.addEventListener('message', handleOAuthMessage);
-    return () => window.removeEventListener('message', handleOAuthMessage);
+    window.addEventListener('storage', handleStorageEvent);
+    return () => {
+      window.removeEventListener('message', handleOAuthMessage);
+      window.removeEventListener('storage', handleStorageEvent);
+    };
   }, [isOpen, authMode]);
 
   const completeOAuthSession = async (

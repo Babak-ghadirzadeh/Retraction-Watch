@@ -632,32 +632,38 @@ app.post('/api/auth/federated', (req: Request, res: Response) => {
   }
 });
 
-// Helper to resolve accurate canonical base URL for OAuth callbacks
+// Helper to resolve accurate canonical base URL for OAuth callbacks (dynamic to support both dev and pre shared environments)
 const getAppBaseUrl = (req: Request): string => {
-  if (process.env.APP_URL) {
-    return process.env.APP_URL.replace(/\/+$/, '');
-  }
   const originParam = req.query.origin as string;
   if (originParam && (originParam.startsWith('http://') || originParam.startsWith('https://'))) {
     return originParam.replace(/\/+$/, '');
   }
-  const proto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'https';
-  const host = (req.headers['x-forwarded-host'] as string) || req.headers.host || `localhost:${PORT}`;
-  return `${proto}://${host}`.replace(/\/+$/, '');
+  const forwardedHost = (req.headers['x-forwarded-host'] as string) || req.headers.host;
+  const forwardedProto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'https';
+  if (forwardedHost) {
+    return `${forwardedProto}://${forwardedHost}`.replace(/\/+$/, '');
+  }
+  if (process.env.APP_URL) {
+    return process.env.APP_URL.replace(/\/+$/, '');
+  }
+  return `http://localhost:${PORT}`;
 };
 
 // ORCID OAuth 2.0 URL generator endpoint (Direct to orcid.org/oauth/authorize)
 app.get('/api/auth/orcid/url', (req: Request, res: Response) => {
   const baseUrl = getAppBaseUrl(req);
-  const redirectUri = `${baseUrl}/auth/orcid/callback`;
+  const redirectUri = (req.query.redirect_uri as string) || `${baseUrl}/auth/orcid/callback`;
   const clientId = (req.query.client_id as string) || process.env.ORCID_CLIENT_ID || 'APP-CPE3YFJJIX248DK5';
+
+  const statePayload = { origin: baseUrl, redirectUri, ts: Date.now() };
+  const stateStr = Buffer.from(JSON.stringify(statePayload)).toString('base64url');
 
   const params = new URLSearchParams({
     client_id: clientId,
     response_type: 'code',
     scope: '/authenticate',
     redirect_uri: redirectUri,
-    state: (req.query.state as string) || 'retractscan_orcid_auth',
+    state: (req.query.state as string) || stateStr,
   });
 
   const authUrl = `https://orcid.org/oauth/authorize?${params.toString()}`;
@@ -672,9 +678,12 @@ app.get('/api/auth/orcid/url', (req: Request, res: Response) => {
 // ORCID OAuth Route (Redirects to official orcid.org if real Client ID configured, else provides clean authentic popup)
 app.get('/auth/orcid/login', (req: Request, res: Response) => {
   const baseUrl = getAppBaseUrl(req);
-  const redirectUri = `${baseUrl}/auth/orcid/callback`;
+  const redirectUri = (req.query.redirect_uri as string) || `${baseUrl}/auth/orcid/callback`;
   const rawClientId = (req.query.client_id as string) || process.env.ORCID_CLIENT_ID || 'APP-CPE3YFJJIX248DK5';
   const isRealClientId = rawClientId.trim().length > 0 && !rawClientId.includes('APP-8A97J1Z689X1W39S');
+
+  const statePayload = { origin: baseUrl, redirectUri, ts: Date.now() };
+  const stateStr = Buffer.from(JSON.stringify(statePayload)).toString('base64url');
 
   if (isRealClientId) {
     const params = new URLSearchParams({
@@ -682,7 +691,7 @@ app.get('/auth/orcid/login', (req: Request, res: Response) => {
       response_type: 'code',
       scope: '/authenticate',
       redirect_uri: redirectUri,
-      state: (req.query.state as string) || `orcid_${Date.now()}`,
+      state: (req.query.state as string) || stateStr,
     });
     return res.redirect(`https://orcid.org/oauth/authorize?${params.toString()}`);
   }
@@ -799,8 +808,11 @@ app.get('/auth/orcid/login', (req: Request, res: Response) => {
 // Google OAuth 2.0 URL generator endpoint (Direct to accounts.google.com/o/oauth2/v2/auth)
 app.get('/api/auth/google/url', (req: Request, res: Response) => {
   const baseUrl = getAppBaseUrl(req);
-  const redirectUri = `${baseUrl}/auth/google/callback`;
+  const redirectUri = (req.query.redirect_uri as string) || `${baseUrl}/auth/google/callback`;
   const clientId = (req.query.client_id as string) || process.env.GOOGLE_CLIENT_ID || '';
+
+  const statePayload = { origin: baseUrl, redirectUri, ts: Date.now() };
+  const stateStr = Buffer.from(JSON.stringify(statePayload)).toString('base64url');
 
   const params = new URLSearchParams({
     client_id: clientId,
@@ -809,7 +821,7 @@ app.get('/api/auth/google/url', (req: Request, res: Response) => {
     scope: 'openid email profile',
     access_type: 'online',
     prompt: 'select_account',
-    state: (req.query.state as string) || 'retractscan_google_auth',
+    state: (req.query.state as string) || stateStr,
   });
 
   const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
@@ -824,9 +836,12 @@ app.get('/api/auth/google/url', (req: Request, res: Response) => {
 // Google OAuth Route (Redirects to official accounts.google.com if real Client ID configured, else provides clean authentic popup)
 app.get('/auth/google/login', (req: Request, res: Response) => {
   const baseUrl = getAppBaseUrl(req);
-  const redirectUri = `${baseUrl}/auth/google/callback`;
+  const redirectUri = (req.query.redirect_uri as string) || `${baseUrl}/auth/google/callback`;
   const rawClientId = (req.query.client_id as string) || process.env.GOOGLE_CLIENT_ID || '';
   const isRealClientId = rawClientId.trim().length > 0 && !rawClientId.includes('retractscan-preview') && rawClientId.includes('.apps.googleusercontent.com');
+
+  const statePayload = { origin: baseUrl, redirectUri, ts: Date.now() };
+  const stateStr = Buffer.from(JSON.stringify(statePayload)).toString('base64url');
 
   if (isRealClientId) {
     const params = new URLSearchParams({
@@ -836,7 +851,7 @@ app.get('/auth/google/login', (req: Request, res: Response) => {
       scope: 'openid email profile',
       access_type: 'online',
       prompt: 'select_account',
-      state: (req.query.state as string) || `google_${Date.now()}`,
+      state: (req.query.state as string) || stateStr,
     });
     return res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`);
   }
@@ -959,6 +974,17 @@ app.get(['/auth/orcid/callback', '/auth/orcid/callback/'], async (req: Request, 
   let orcid = (req.query.orcid as string) || '';
   let name = (req.query.name as string) || '';
 
+  let returnOrigin = getAppBaseUrl(req);
+  try {
+    const rawState = req.query.state as string;
+    if (rawState) {
+      const decoded = JSON.parse(Buffer.from(rawState, 'base64url').toString('utf-8'));
+      if (decoded.origin) {
+        returnOrigin = decoded.origin;
+      }
+    }
+  } catch (e) {}
+
   // If ORCID client secret is present, attempt live token exchange
   if (code && process.env.ORCID_CLIENT_SECRET) {
     try {
@@ -1039,21 +1065,45 @@ app.get(['/auth/orcid/callback', '/auth/orcid/callback/'], async (req: Request, 
         </div>
         <script>
           function finishAuth() {
-            if (window.opener) {
-              window.opener.postMessage({
-                type: 'OAUTH_AUTH_SUCCESS',
-                provider: 'orcid',
+            var payload = {
+              type: 'OAUTH_AUTH_SUCCESS',
+              provider: 'orcid',
+              orcid: '${orcid}',
+              name: '${name}',
+              journal: 'The Lancet',
+              role: 'Senior Integrity Editor',
+              authProvider: 'orcid',
+              isLoggedIn: true,
+              timestamp: Date.now()
+            };
+
+            // Cross-tab and mobile localStorage sync
+            try {
+              localStorage.setItem('retractscan_oauth_complete', JSON.stringify(payload));
+              localStorage.setItem('retractscan_editor_profile', JSON.stringify({
+                name: '${name}',
+                email: 'orcid-${orcid.replace(/[^0-9]/g, '').slice(-4)}@lancet-editorial.org',
                 orcid: '${orcid}',
-                name: '${name}'
-              }, '*');
-              setTimeout(function() { window.close(); }, 600);
+                journal: 'The Lancet',
+                role: 'Senior Integrity Editor',
+                authProvider: 'orcid',
+                institution: 'ORCID Verified Researcher',
+                isLoggedIn: true
+              }));
+            } catch (e) {}
+
+            if (window.opener) {
+              try {
+                window.opener.postMessage(payload, '*');
+              } catch (e) {}
+              setTimeout(function() { window.close(); }, 500);
             } else {
-              window.location.href = '/';
+              window.location.href = '${returnOrigin}/?oauth_login_provider=orcid&orcid=' + encodeURIComponent('${orcid}') + '&name=' + encodeURIComponent('${name}');
             }
           }
           // Automatically notify opener and close
           window.onload = function() {
-            setTimeout(finishAuth, 500);
+            setTimeout(finishAuth, 400);
           };
         </script>
       </body>
@@ -1067,6 +1117,17 @@ app.get(['/auth/google/callback', '/auth/google/callback/'], async (req: Request
   const error = (req.query.error as string) || '';
   let email = (req.query.email as string) || '';
   let name = (req.query.name as string) || '';
+
+  let returnOrigin = getAppBaseUrl(req);
+  try {
+    const rawState = req.query.state as string;
+    if (rawState) {
+      const decoded = JSON.parse(Buffer.from(rawState, 'base64url').toString('utf-8'));
+      if (decoded.origin) {
+        returnOrigin = decoded.origin;
+      }
+    }
+  } catch (e) {}
 
   // If Google client secret is provided, attempt live token exchange
   if (code && process.env.GOOGLE_CLIENT_SECRET) {
@@ -1159,21 +1220,44 @@ app.get(['/auth/google/callback', '/auth/google/callback/'], async (req: Request
         </div>
         <script>
           function finishAuth() {
-            if (window.opener) {
-              window.opener.postMessage({
-                type: 'OAUTH_AUTH_SUCCESS',
-                provider: 'google',
+            var payload = {
+              type: 'OAUTH_AUTH_SUCCESS',
+              provider: 'google',
+              name: '${name}',
+              email: '${email}',
+              journal: 'The Lancet',
+              role: 'Senior Integrity Editor',
+              authProvider: 'google',
+              isLoggedIn: true,
+              timestamp: Date.now()
+            };
+
+            // Cross-tab and mobile localStorage sync
+            try {
+              localStorage.setItem('retractscan_oauth_complete', JSON.stringify(payload));
+              localStorage.setItem('retractscan_editor_profile', JSON.stringify({
                 name: '${name}',
-                email: '${email}'
-              }, '*');
-              setTimeout(function() { window.close(); }, 600);
+                email: '${email}',
+                journal: 'The Lancet',
+                role: 'Senior Integrity Editor',
+                authProvider: 'google',
+                institution: 'Google Verified Researcher',
+                isLoggedIn: true
+              }));
+            } catch (e) {}
+
+            if (window.opener) {
+              try {
+                window.opener.postMessage(payload, '*');
+              } catch (e) {}
+              setTimeout(function() { window.close(); }, 500);
             } else {
-              window.location.href = '/';
+              window.location.href = '${returnOrigin}/?oauth_login_provider=google&email=' + encodeURIComponent('${email}') + '&name=' + encodeURIComponent('${name}');
             }
           }
           // Automatically notify opener and close
           window.onload = function() {
-            setTimeout(finishAuth, 500);
+            setTimeout(finishAuth, 400);
           };
         </script>
       </body>
