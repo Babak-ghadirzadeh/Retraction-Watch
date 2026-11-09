@@ -44,3 +44,132 @@
     page-break-after: always;
   }
 }
+
+@keyframes floatGentle {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(1.5deg);
+  }
+}
+
+@keyframes floatReverse {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(14px) rotate(-1.5deg);
+  }
+}
+
+@keyframes floatDrift {
+  0%, 100% {
+    transform: translate(0px, 0px) rotate(0deg);
+  }
+  33% {
+    transform: translate(8px, -10px) rotate(2deg);
+  }
+  66% {
+    transform: translate(-6px, -18px) rotate(-1deg);
+  }
+}
+
+@keyframes pulseSoft {
+  0%, 100% {
+    opacity: 0.18;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.32;
+    transform: scale(1.08);
+  }
+}
+
+/* Floating in place keyframes for structural sections & cards */
+@keyframes floatInPlaceA {
+  0%, 100% {
+    transform: translateY(0px);
+    box-shadow: 0 4px 18px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -2px rgba(15, 23, 42, 0.02);
+  }
+  50% {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 30px -4px rgba(15, 23, 42, 0.08), 0 8px 14px -4px rgba(15, 23, 42, 0.04);
+  }
+}
+
+@keyframes floatInPlaceB {
+  0%, 100% {
+    transform: translateY(0px);
+    box-shadow: 0 4px 18px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -2px rgba(15, 23, 42, 0.02);
+  }
+  50% {
+    transform: translateY(-5px);
+    box-shadow: 0 14px 26px -4px rgba(15, 23, 42, 0.08), 0 6px 12px -4px rgba(15, 23, 42, 0.04);
+  }
+}
+
+@keyframes floatInPlaceHeader {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-float-gentle {
+  animation: floatGentle 10s ease-in-out infinite;
+}
+
+.animate-float-reverse {
+  animation: floatReverse 13s ease-in-out infinite;
+}
+
+.animate-float-drift {
+  animation: floatDrift 16s ease-in-out infinite;
+}
+
+.animate-pulse-soft {
+  animation: pulseSoft 9s ease-in-out infinite;
+}
+
+/* Floating in place utilities */
+.animate-float-in-place-1 {
+  animation: floatInPlaceA 6.5s ease-in-out infinite;
+  will-change: transform, box-shadow;
+}
+
+.animate-float-in-place-2 {
+  animation: floatInPlaceHeader 7.2s ease-in-out 0.8s infinite;
+  will-change: transform;
+}
+
+.animate-float-in-place-3 {
+  animation: floatInPlaceA 8.4s ease-in-out 1.6s infinite;
+  will-change: transform, box-shadow;
+}
+
+.animate-float-in-place-4 {
+  animation: floatInPlaceB 6.8s ease-in-out 0.4s infinite;
+  will-change: transform, box-shadow;
+}
+
+.animate-float-in-place-5 {
+  animation: floatInPlaceA 7.5s ease-in-out 2s infinite;
+  will-change: transform, box-shadow;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-gentle,
+  .animate-float-reverse,
+  .animate-float-drift,
+  .animate-pulse-soft,
+  .animate-float-in-place-1,
+  .animate-float-in-place-2,
+  .animate-float-in-place-3,
+  .animate-float-in-place-4,
+  .animate-float-in-place-5 {
+    animation: none !important;
+  }
+}

@@ -25,6 +25,8 @@ interface EditorAuthModalProps {
   onSaveProfile: (profile: EditorProfile) => void;
 }
 
+const STORAGE_REMEMBERED_KEY = 'retractscan_remembered_credentials';
+
 export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
   isOpen,
   onClose,
@@ -54,19 +56,39 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Reset form when modal opens
+  // Reset or pre-fill form when modal opens
   useEffect(() => {
     if (isOpen) {
       setErrorMessage(null);
       setSuccessMessage(null);
       setIsEditingExisting(false);
       setName(editor.isLoggedIn ? (editor.name || '') : '');
-      setEmail(editor.isLoggedIn ? (editor.email || '') : '');
       setJournal(editor.isLoggedIn ? (editor.journal || 'The Lancet') : 'The Lancet');
       setRole(editor.isLoggedIn ? (editor.role || 'Senior Integrity Editor') : 'Senior Integrity Editor');
       setOrcid(editor.isLoggedIn ? (editor.orcid || '') : '');
       setInstitution(editor.isLoggedIn ? (editor.institution || '') : '');
-      setPassword('');
+
+      if (editor.isLoggedIn) {
+        setEmail(editor.email || '');
+        setPassword('');
+      } else {
+        // Pre-fill remembered credentials if available
+        try {
+          const remembered = localStorage.getItem(STORAGE_REMEMBERED_KEY);
+          if (remembered) {
+            const creds = JSON.parse(remembered);
+            if (creds?.email) setEmail(creds.email);
+            if (creds?.password) setPassword(creds.password);
+            if (creds?.name && !name) setName(creds.name);
+          } else {
+            setEmail(editor.email || '');
+            setPassword('');
+          }
+        } catch {
+          setEmail(editor.email || '');
+          setPassword('');
+        }
+      }
       setConfirmPassword('');
     }
   }, [isOpen, editor]);
@@ -216,6 +238,30 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
 
   if (!isOpen) return null;
 
+  const saveAccountCredentialsLocally = (acc: {
+    email: string;
+    password?: string;
+    name?: string;
+    [key: string]: any;
+  }) => {
+    try {
+      if (rememberMe) {
+        localStorage.setItem(
+          STORAGE_REMEMBERED_KEY,
+          JSON.stringify({
+            email: acc.email,
+            password: acc.password || password,
+            name: acc.name || name,
+          })
+        );
+      } else {
+        localStorage.removeItem(STORAGE_REMEMBERED_KEY);
+      }
+    } catch (e) {
+      console.warn('Could not save credentials locally:', e);
+    }
+  };
+
   // Handle Email Sign In Submission
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -231,6 +277,13 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
 
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.editor) {
+        saveAccountCredentialsLocally({
+          email: email.trim(),
+          password,
+          name: data.editor.name,
+          journal: data.editor.journal,
+          role: data.editor.role,
+        });
         onSaveProfile(data.editor);
         setSuccessMessage('Editorial session verified');
         setTimeout(() => onClose(), 600);
@@ -249,6 +302,13 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
           authProvider: 'email',
           isLoggedIn: true,
         };
+        saveAccountCredentialsLocally({
+          email: email.trim(),
+          password,
+          name: profile.name,
+          journal: profile.journal,
+          role: profile.role,
+        });
         onSaveProfile(profile);
         onClose();
       } else {
@@ -291,6 +351,15 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
 
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.editor) {
+        saveAccountCredentialsLocally({
+          email: email.trim(),
+          password,
+          name: name.trim(),
+          journal: journal.trim(),
+          role: role.trim(),
+          orcid: orcid.trim(),
+          institution: institution.trim(),
+        });
         onSaveProfile(data.editor);
         setSuccessMessage('Account created and signed in successfully!');
         setTimeout(() => onClose(), 700);
@@ -309,6 +378,15 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
         authProvider: 'email',
         isLoggedIn: true,
       };
+      saveAccountCredentialsLocally({
+        email: email.trim(),
+        password,
+        name: name.trim(),
+        journal: journal.trim(),
+        role: role.trim(),
+        orcid: orcid.trim(),
+        institution: institution.trim(),
+      });
       onSaveProfile(newProfile);
       onClose();
     } finally {
@@ -466,10 +544,10 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
                   type="button"
                   disabled={isSubmitting}
                   onClick={handleGoogleClick}
-                  className="w-full flex items-center justify-center gap-2.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-900 dark:text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-900 dark:text-white text-xs font-semibold shadow-xs hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] transition-all duration-200 cursor-pointer"
                   title={authMode === 'signup' ? 'Create editorial account with Google Identity' : 'Sign in with Google'}
                 >
-                  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 shrink-0 transition-transform group-hover:scale-110" viewBox="0 0 24 24">
                     <path
                       fill="#4285F4"
                       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -494,10 +572,10 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
                   type="button"
                   disabled={isSubmitting}
                   onClick={handleOrcidClick}
-                  className="w-full flex items-center justify-center gap-2.5 px-3 py-2 rounded-xl border border-[#A6CE39]/70 bg-gradient-to-r from-emerald-50/50 to-lime-50/30 dark:from-emerald-950/20 dark:to-lime-950/10 hover:border-[#A6CE39] hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-slate-900 dark:text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2.5 px-3 py-2 rounded-xl border border-[#A6CE39]/70 bg-gradient-to-r from-emerald-50/50 to-lime-50/30 dark:from-emerald-950/20 dark:to-lime-950/10 hover:border-[#A6CE39] hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-slate-900 dark:text-white text-xs font-semibold shadow-xs hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] transition-all duration-200 cursor-pointer"
                   title={authMode === 'signup' ? 'Create editorial account with verified ORCID iD' : 'Sign in with ORCID'}
                 >
-                  <span className="w-4 h-4 rounded-full bg-[#A6CE39] text-white flex items-center justify-center font-bold text-[9px] shrink-0">
+                  <span className="w-4 h-4 rounded-full bg-[#A6CE39] text-white flex items-center justify-center font-bold text-[9px] shrink-0 shadow-2xs">
                     iD
                   </span>
                   <span>{authMode === 'signup' ? 'Sign up with ORCID' : 'Sign in with ORCID'}</span>
@@ -515,15 +593,27 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
 
               {/* Sign In Form */}
               {authMode === 'signin' && (
-                <form onSubmit={handleEmailSignIn} className="space-y-3.5">
+                <form
+                  method="post"
+                  action="#"
+                  autoComplete="on"
+                  onSubmit={handleEmailSignIn}
+                  className="space-y-3.5"
+                >
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    <label
+                      htmlFor="modal-login-email"
+                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                    >
                       Institutional Email Address
                     </label>
                     <div className="relative">
                       <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                       <input
+                        id="modal-login-email"
+                        name="email"
                         type="email"
+                        autoComplete="username"
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -535,14 +625,20 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
 
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      <label
+                        htmlFor="modal-login-password"
+                        className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                      >
                         Password
                       </label>
                     </div>
                     <div className="relative">
                       <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                       <input
+                        id="modal-login-password"
+                        name="password"
                         type={showPassword ? 'text' : 'password'}
+                        autoComplete="current-password"
                         required
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -560,21 +656,21 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
                   </div>
 
                   <div className="flex items-center justify-between text-xs pt-1">
-                    <label className="flex items-center gap-2 cursor-pointer text-slate-600 dark:text-slate-400">
+                    <label className="flex items-center gap-2 cursor-pointer text-slate-600 dark:text-slate-400 select-none">
                       <input
                         type="checkbox"
                         checked={rememberMe}
                         onChange={(e) => setRememberMe(e.target.checked)}
                         className="rounded border-slate-300 text-slate-900 focus:ring-slate-500"
                       />
-                      <span>Keep me signed in</span>
+                      <span>Save & remember my login on this device</span>
                     </label>
                   </div>
 
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 disabled:opacity-60 rounded-xl shadow-xs transition-colors cursor-pointer"
+                    className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 disabled:opacity-60 rounded-xl shadow-xs hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] transition-all duration-200 cursor-pointer"
                   >
                     <CheckCircle2 className="w-4 h-4" />
                     <span>{isSubmitting ? 'Authenticating...' : 'Sign In'}</span>
@@ -584,15 +680,27 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
 
               {/* Sign Up Form */}
               {authMode === 'signup' && (
-                <form onSubmit={handleEmailSignUp} className="space-y-3">
+                <form
+                  method="post"
+                  action="#"
+                  autoComplete="on"
+                  onSubmit={handleEmailSignUp}
+                  className="space-y-3"
+                >
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    <label
+                      htmlFor="modal-reg-name"
+                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                    >
                       Full Name
                     </label>
                     <div className="relative">
                       <UserCheck className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                       <input
+                        id="modal-reg-name"
+                        name="name"
                         type="text"
+                        autoComplete="name"
                         required
                         value={name}
                         onChange={(e) => setName(e.target.value)}
@@ -603,13 +711,19 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    <label
+                      htmlFor="modal-reg-email"
+                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                    >
                       Email Address
                     </label>
                     <div className="relative">
                       <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                       <input
+                        id="modal-reg-email"
+                        name="email"
                         type="email"
+                        autoComplete="username"
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -621,13 +735,19 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      <label
+                        htmlFor="modal-reg-password"
+                        className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                      >
                         Password (min 6 chars)
                       </label>
                       <div className="relative">
                         <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                         <input
+                          id="modal-reg-password"
+                          name="password"
                           type={showPassword ? 'text' : 'password'}
+                          autoComplete="new-password"
                           required
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
@@ -638,13 +758,19 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      <label
+                        htmlFor="modal-reg-confirmpassword"
+                        className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                      >
                         Confirm Password
                       </label>
                       <div className="relative">
                         <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                         <input
+                          id="modal-reg-confirmpassword"
+                          name="confirm-password"
                           type={showPassword ? 'text' : 'password'}
+                          autoComplete="new-password"
                           required
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
@@ -653,6 +779,18 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
                         />
                       </div>
                     </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs pt-1">
+                    <label className="flex items-center gap-2 cursor-pointer text-slate-600 dark:text-slate-400 select-none">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="rounded border-slate-300 text-slate-900 focus:ring-slate-500"
+                      />
+                      <span>Save & remember my login on this device</span>
+                    </label>
                   </div>
 
                   <button

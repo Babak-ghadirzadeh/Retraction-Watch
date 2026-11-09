@@ -160,7 +160,7 @@ Confidential Journal Editorial Dossier · RetractScan Academic Integrity Suite
             <button
               type="button"
               onClick={handlePrint}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-xs font-semibold hover:bg-slate-800 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-xs font-semibold hover:bg-slate-800 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-200 cursor-pointer shadow-xs hover:shadow-md"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>Print / Save as PDF</span>
@@ -168,7 +168,7 @@ Confidential Journal Editorial Dossier · RetractScan Academic Integrity Suite
             <button
               type="button"
               onClick={handleDownloadText}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-200 cursor-pointer shadow-2xs hover:shadow-xs"
             >
               <Download className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Text File</span>
@@ -176,7 +176,7 @@ Confidential Journal Editorial Dossier · RetractScan Academic Integrity Suite
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 hover:rotate-90 transition-all duration-200 cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>

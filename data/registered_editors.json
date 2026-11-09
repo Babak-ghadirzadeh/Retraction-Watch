@@ -99,5 +99,25 @@
     "role": "Integrity Editor",
     "authProvider": "email",
     "createdAt": "2026-11-04T15:13:18.637Z"
+  },
+  {
+    "id": "editor-1794072135000-jbka",
+    "name": "Dr. Tester Verification",
+    "email": "test_verify_user@retractscan.org",
+    "password": "mypassword2026",
+    "journal": "Nature Medicine",
+    "role": "Integrity Editor",
+    "authProvider": "email",
+    "createdAt": "2026-11-07T17:22:15.000Z"
+  },
+  {
+    "id": "editor-1794072498906-y9d1",
+    "name": "Test Reviewer",
+    "email": "reviewer.test@institution.edu",
+    "password": "password123",
+    "journal": "Nature",
+    "role": "Peer Reviewer",
+    "authProvider": "email",
+    "createdAt": "2026-11-07T17:28:18.906Z"
   }
 ]

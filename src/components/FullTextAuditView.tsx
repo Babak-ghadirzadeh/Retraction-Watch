@@ -371,7 +371,7 @@ export const FullTextAuditView: React.FC<FullTextAuditViewProps> = ({
         <p className="text-sm text-slate-500">No review articles selected for full-text impact analysis.</p>
         <button
           onClick={onBackToAudit}
-          className="mt-4 px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-semibold cursor-pointer"
+          className="mt-4 px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-semibold hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-200 cursor-pointer shadow-xs"
         >
           Return to Audit Dashboard
         </button>
@@ -388,10 +388,10 @@ export const FullTextAuditView: React.FC<FullTextAuditViewProps> = ({
             <button
               type="button"
               onClick={onBackToAudit}
-              className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+              className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-200 cursor-pointer shadow-2xs hover:shadow-xs group"
               title="Return to Audit Overview"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
             </button>
             <div>
               <div className="flex items-center gap-2">
@@ -415,7 +415,7 @@ export const FullTextAuditView: React.FC<FullTextAuditViewProps> = ({
             <button
               type="button"
               onClick={handleExportCsv}
-              className="text-xs font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="text-xs font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all duration-200 cursor-pointer shadow-2xs hover:shadow-xs"
               title="Download structured CSV dossier including your editorial notes"
             >
               <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
@@ -425,7 +425,7 @@ export const FullTextAuditView: React.FC<FullTextAuditViewProps> = ({
             <button
               type="button"
               onClick={() => setIsDossierModalOpen(true)}
-              className="text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+              className="text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition-all duration-200 cursor-pointer shadow-xs hover:shadow-md"
               title="Generate formal PDF report ready for journal editorial board"
             >
               <Printer className="w-3.5 h-3.5" />
@@ -490,7 +490,7 @@ export const FullTextAuditView: React.FC<FullTextAuditViewProps> = ({
                 type="button"
                 onClick={handleRunAiAnalysis}
                 disabled={isCurrentLoading}
-                className={`px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 shadow-xs transition-colors cursor-pointer ${
+                className={`px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 shadow-xs hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-200 cursor-pointer ${
                   isCurrentLoading
                     ? 'bg-slate-300 text-slate-500 dark:bg-slate-800 dark:text-slate-500 cursor-not-allowed'
                     : currentAnalysis

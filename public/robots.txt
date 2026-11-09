@@ -1,0 +1,9 @@
+# RetractScan Robots.txt
+# Crawler access is fully allowed for search engine indexing
+User-agent: *
+Allow: /
+Disallow: /api/
+
+# Sitemap locations
+Sitemap: https://retractscan.studio.ai/sitemap.xml
+Sitemap: https://ais-pre-dzwyolr2chobabko7tzgp3-45122006777.europe-west2.run.app/sitemap.xml

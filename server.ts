@@ -2635,6 +2635,22 @@ ${manuscriptText || '(Full PDF document and figures are provided via inline data
   }
 });
 
+// Google Search Console Site Verification Endpoint
+app.get('/google5bd1140f9295063b.html', (_req: Request, res: Response) => {
+  res.type('text/html').send('google-site-verification: google5bd1140f9295063b.html');
+});
+
+// Favicon & Brand Icon Direct Endpoints
+const LOGO_FILE_PATH = path.resolve(process.cwd(), 'public/assets/aistudio/Document_Search_Orbit_Icon_ea742aca.png');
+app.get(['/favicon.ico', '/favicon.png', '/apple-touch-icon.png', '/apple-touch-icon-precomposed.png'], (_req: Request, res: Response) => {
+  if (fs.existsSync(LOGO_FILE_PATH)) {
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.sendFile(LOGO_FILE_PATH);
+  }
+  return res.status(404).end();
+});
+
 // 7. Academic Full-Text Endpoint
 app.get('/api/academic/sample-fulltext', (_req: Request, res: Response) => {
   return res.json({ fullText: '', fileName: '' });
@@ -2645,7 +2661,13 @@ app.get('/api/academic/sample-fulltext', (_req: Request, res: Response) => {
 async function startServer() {
   const isDev = process.env.NODE_ENV === 'development';
   const distPath = path.resolve(process.cwd(), 'dist');
+  const publicPath = path.resolve(process.cwd(), 'public');
   const hasDist = fs.existsSync(path.resolve(distPath, 'index.html'));
+
+  // Serve static public assets (robots.txt, sitemap.xml, logos) directly
+  if (fs.existsSync(publicPath)) {
+    app.use(express.static(publicPath));
+  }
 
   if (isDev || !hasDist) {
     const vite = await createViteServer({

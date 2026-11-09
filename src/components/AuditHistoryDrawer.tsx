@@ -99,10 +99,10 @@ export const AuditHistoryDrawer: React.FC<AuditHistoryDrawerProps> = ({
                 <button
                   type="button"
                   onClick={() => onSelectSession(session)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-200 cursor-pointer shadow-2xs hover:shadow-xs group"
                 >
                   <span>Open Audit Dashboard</span>
-                  <ArrowUpRight className="w-4 h-4 text-slate-500" />
+                  <ArrowUpRight className="w-4 h-4 text-slate-500 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </button>
               </div>
             </div>

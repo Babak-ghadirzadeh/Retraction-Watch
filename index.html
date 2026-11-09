@@ -3,19 +3,255 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RetractScan: Journal Editorial Citation & Retraction Audit</title>
-    <meta name="description" content="Academic journal editorial audit platform to discover secondary research, detect retracted citations using Crossref, PubMed, and OpenAlex, and export editorial risk assessments." />
-    <meta property="og:title" content="RetractScan: Journal Editorial Citation & Retraction Audit" />
-    <meta property="og:description" content="Academic journal editorial audit platform to discover secondary research, detect retracted citations using Crossref, PubMed, and OpenAlex, and export editorial risk assessments." />
+    <title>RetractScan | AI Retraction Checker &amp; Paper Scanner</title>
+    <meta
+      name="description"
+      content="Scan academic papers for retracted citations using Crossref &amp; PubMed. Verify manuscripts before submission and audit journals with RetractScan."
+    />
+    <meta
+      name="keywords"
+      content="check retracted scientific papers, academic paper integrity tool, retraction scanner, retracted citations, manuscript pre-flight check, Crossref retraction, PubMed retraction, COPE guidelines, retraction audit"
+    />
+    <meta name="author" content="RetractScan Editorial Consortium" />
+    <meta
+      name="robots"
+      content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"
+    />
+    <link rel="canonical" href="https://retractscan.studio.ai/" />
+    <meta name="google-site-verification" content="google5bd1140f9295063b" />
+    <meta name="google-site-verification" content="google5bd1140f9295063b.html" />
+
+    <!-- Favicon & Touch Icon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/aistudio/Document_Search_Orbit_Icon_ea742aca.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/aistudio/Document_Search_Orbit_Icon_ea742aca.png" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/aistudio/Document_Search_Orbit_Icon_ea742aca.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- OpenGraph Social Metadata -->
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="RetractScan" />
+    <meta property="og:url" content="https://retractscan.studio.ai/" />
+    <meta property="og:title" content="RetractScan | AI Retraction Checker &amp; Paper Scanner" />
+    <meta
+      property="og:description"
+      content="Scan academic papers for retracted citations using Crossref &amp; PubMed. Verify manuscripts before submission and audit journals with RetractScan."
+    />
+    <meta property="og:image" content="https://retractscan.studio.ai/assets/aistudio/Document_Search_Orbit_Icon_ea742aca.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="RetractScan Scientific Document Search and Retraction Audit Logo" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter / X Card Metadata -->
     <meta name="twitter:card" content="summary_large_image" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..600;1,9..40,400..600&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="twitter:url" content="https://retractscan.studio.ai/" />
+    <meta name="twitter:title" content="RetractScan | AI Retraction Checker &amp; Paper Scanner" />
+    <meta
+      name="twitter:description"
+      content="Scan academic papers for retracted citations using Crossref &amp; PubMed. Verify manuscripts before submission and audit journals with RetractScan."
+    />
+    <meta name="twitter:image" content="https://retractscan.studio.ai/assets/aistudio/Document_Search_Orbit_Icon_ea742aca.png" />
+    <meta name="twitter:image:alt" content="RetractScan Scientific Document Search and Retraction Audit Logo" />
+
+    <!-- Schema.org JSON-LD Structured Data: WebApplication, Organization, ScholarlyArticle & FAQPage -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebApplication",
+          "@id": "https://retractscan.studio.ai/#webapp",
+          "name": "RetractScan",
+          "url": "https://retractscan.studio.ai/",
+          "applicationCategory": "EducationalApplication, ResearchApplication, HealthApplication",
+          "operatingSystem": "All",
+          "description": "Academic paper integrity tool and retraction audit platform that detects retracted citations across Crossref, PubMed, and OpenAlex, verifying manuscripts before submission and auditing journals.",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "featureList": [
+            "Live Crossref REST API retraction status indexing",
+            "PubMed E-Utilities and MeSH retraction notice matching",
+            "OpenAlex multidisciplinary citation graph cross-referencing",
+            "Pre-submission manuscript pre-flight citation screening for DOCX and PDF",
+            "Committee on Publication Ethics (COPE) compliant corrigendum drafting",
+            "Single DOI and PubMed ID instant retraction resolution",
+            "Full-text AI evidence synthesis and forest plot contamination auditing"
+          ],
+          "creator": {
+            "@id": "https://retractscan.studio.ai/#organization"
+          }
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://retractscan.studio.ai/#organization",
+          "name": "RetractScan Academic Audit Consortium",
+          "url": "https://retractscan.studio.ai/",
+          "logo": "https://retractscan.studio.ai/assets/aistudio/Document_Search_Orbit_Icon_ea742aca.png",
+          "description": "International academic consortium providing clinical citation integrity and retraction detection tools for researchers, editors, and universities."
+        },
+        {
+          "@type": "ScholarlyArticle",
+          "@id": "https://retractscan.studio.ai/#methodology",
+          "headline": "Academic Paper Integrity Tool and Retraction Audit Platform Methodology",
+          "description": "Four-layer detection architecture synthesizing Crossref, PubMed, Europe PMC, and OpenAlex to identify post-retraction citation contamination in secondary scientific literature.",
+          "author": {
+            "@type": "Person",
+            "name": "Babak Ghadirzadeh, M.D."
+          },
+          "publisher": {
+            "@id": "https://retractscan.studio.ai/#organization"
+          }
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://retractscan.studio.ai/#faq",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "What is post-retraction citation contamination?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Post-retraction citation contamination occurs when authors unknowingly cite scientific papers that have been officially retracted or flagged for unreliable data, data fabrication, or ethical violations. This can perpetuate invalid findings in meta-analyses and systematic reviews."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How does RetractScan detect retracted papers in manuscripts and journals?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "RetractScan queries Crossref REST API, PubMed E-Utilities, Europe PMC, and OpenAlex in real time. It cross-references reference DOIs against verified retraction notice indices and distinguishes between citations made before versus after the formal retraction date."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Which file formats can be scanned before submission?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "The Pre-Submission Pre-Flight Scanner supports Word manuscripts (.docx), PDF files, plain text reference lists (.txt), and pasted bibliography references, generating an instant verification health certificate."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Does RetractScan comply with COPE guidelines?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes. RetractScan is aligned with the Committee on Publication Ethics (COPE) retraction guidelines, providing editors and authors with pre-drafted errata, corrigenda notices, and editorial assessment templates."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Is RetractScan free to use for academic researchers?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes, RetractScan provides free access to academic researchers, reviewers, and journal editorial boards to scan individual DOIs, upload manuscripts for pre-flight screening, and audit journal archives."
+              }
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+
+    <!-- Typography Fonts Preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..600;1,9..40,400..600&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Client-Side Hydration Container with Semantic SEO Fallback for Search Bots -->
+    <div id="root">
+      <header style="padding: 1.5rem 2rem; border-bottom: 1px solid #e5e7eb; font-family: sans-serif;">
+        <div style="max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between;">
+          <div style="font-weight: bold; font-size: 1.25rem;">RetractScan</div>
+          <nav style="font-size: 0.875rem; color: #4b5563;">
+            Academic Paper Integrity Tool &amp; Retraction Audit Platform
+          </nav>
+        </div>
+      </header>
+
+      <main style="max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem; font-family: sans-serif; line-height: 1.6; color: #1f2937;">
+        <article>
+          <h1 style="font-size: 2.25rem; font-weight: 800; line-height: 1.2; color: #111827; margin-bottom: 1rem;">
+            Academic Paper Integrity Tool and Retraction Audit Platform
+          </h1>
+          <p style="font-size: 1.125rem; color: #4b5563; max-width: 800px; margin-bottom: 2rem;">
+            RetractScan scans academic manuscripts, journal archives, and systematic reviews to detect retracted citations in real time using Crossref, PubMed, and OpenAlex. Ensure clinical evidence safety and protect publication integrity before acceptance.
+          </p>
+
+          <section style="margin-bottom: 2.5rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 0.75rem;">
+              Four-Layer Retraction Detection Methodology
+            </h2>
+            <p style="color: #4b5563; margin-bottom: 1rem;">
+              RetractScan applies a multi-channel empirical verification architecture to ensure 100% retraction notice capture without false alarms:
+            </p>
+            <ul style="padding-left: 1.5rem; color: #374151;">
+              <li style="margin-bottom: 0.5rem;">
+                <strong>Layer 1: Crossref REST API Retraction Index</strong> &mdash; Continuous synchronization with publisher Crossmark updates, identifying official retraction notices, expressions of concern, and corrigenda.
+              </li>
+              <li style="margin-bottom: 0.5rem;">
+                <strong>Layer 2: PubMed E-Utilities &amp; MeSH Matching</strong> &mdash; Direct verification against the National Library of Medicine (NLM) PubMed retraction index, parsing PubMed Central full-text notices and MeSH status tags.
+              </li>
+              <li style="margin-bottom: 0.5rem;">
+                <strong>Layer 3: OpenAlex Multidisciplinary Knowledge Graph</strong> &mdash; Cross-domain verification across 250M+ scientific publications, mapping secondary citation propagation across global academic disciplines.
+              </li>
+              <li style="margin-bottom: 0.5rem;">
+                <strong>Layer 4: COPE Corrigenda &amp; Meta-Analysis Contamination Analysis</strong> &mdash; Temporal indexing distinguishing pre-retraction from post-retraction citations, with automated COPE erratum notice drafting.
+              </li>
+            </ul>
+          </section>
+
+          <section style="margin-bottom: 2.5rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 0.75rem;">
+              Purpose-Built for Scholarly Integrity
+            </h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
+              <div style="padding: 1.25rem; border: 1px solid #e5e7eb; border-radius: 0.75rem;">
+                <h3 style="font-size: 1.125rem; font-weight: 600; color: #111827; margin-bottom: 0.5rem;">
+                  For Researchers &amp; Systematic Review Authors
+                </h3>
+                <p style="font-size: 0.875rem; color: #4b5563;">
+                  Screen your manuscript bibliography before journal submission. Upload Word documents or PDFs to generate a verified Pre-Flight Citation Health Certificate.
+                </p>
+              </div>
+              <div style="padding: 1.25rem; border: 1px solid #e5e7eb; border-radius: 0.75rem;">
+                <h3 style="font-size: 1.125rem; font-weight: 600; color: #111827; margin-bottom: 0.5rem;">
+                  For Journal Editors &amp; Peer Reviewers
+                </h3>
+                <p style="font-size: 0.875rem; color: #4b5563;">
+                  Audit entire journal portfolios and back-catalogs. Catch post-publication retractions cited in secondary review studies and generate COPE-compliant corrigenda.
+                </p>
+              </div>
+              <div style="padding: 1.25rem; border: 1px solid #e5e7eb; border-radius: 0.75rem;">
+                <h3 style="font-size: 1.125rem; font-weight: 600; color: #111827; margin-bottom: 0.5rem;">
+                  For Universities &amp; Research Integrity Offices
+                </h3>
+                <p style="font-size: 0.875rem; color: #4b5563;">
+                  Protect institutional publication outputs, verify compliance with clinical research standards, and export structured audit ledgers in CSV and JSON formats.
+                </p>
+              </div>
+            </div>
+          </section>
+        </article>
+      </main>
+    </div>
+
+    <noscript>
+      <div style="padding: 2rem; text-align: center; font-family: sans-serif; background-color: #fef2f2; color: #991b1b;">
+        <h2>JavaScript is required for interactive audits</h2>
+        <p>RetractScan requires JavaScript to query live Crossref, PubMed, and OpenAlex retraction APIs in your browser. Please enable JavaScript to access interactive scanning features.</p>
+      </div>
+    </noscript>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

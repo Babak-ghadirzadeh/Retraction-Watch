@@ -2,9 +2,11 @@ import React from 'react';
 import { ShieldCheck, UserCheck, LogIn, History, LogOut, Home, FileText, Sparkles } from 'lucide-react';
 import { EditorProfile } from '../types/academic';
 
+export type NavTabType = 'home' | 'journal' | 'single' | 'history' | 'fulltext' | 'preflight' | 'profile';
+
 interface NavbarProps {
-  activeTab: 'home' | 'journal' | 'single' | 'history' | 'fulltext';
-  onTabChange: (tab: 'home' | 'journal' | 'single' | 'history' | 'fulltext') => void;
+  activeTab: NavTabType;
+  onTabChange: (tab: NavTabType) => void;
   editor: EditorProfile;
   onOpenAuth: () => void;
   onLogout?: () => void;
@@ -22,34 +24,42 @@ export const Navbar: React.FC<NavbarProps> = ({
   onLogout,
 }) => {
   return (
-    <header className="sticky top-0 z-30 bg-[#fafaf8]/95 dark:bg-[#0f1115]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-8">
-        {/* Zone 1: Brand wordmark (single line) */}
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="w-8 h-8 rounded-lg bg-slate-900 dark:bg-slate-800 flex items-center justify-center text-white shadow-xs">
-            <ShieldCheck className="w-4.5 h-4.5 text-slate-100" />
-          </div>
+    <header className="sticky top-0 z-30 bg-[#FAF9F6]/95 dark:bg-[#121316]/95 backdrop-blur-md border-b border-stone-200/80 dark:border-stone-800/80 transition-colors">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-6">
+        {/* Zone 1: Brand wordmark with official RetractScan Logo */}
+        <div className="flex items-center gap-2.5 shrink-0">
           <button
             onClick={() => onTabChange('home')}
-            className="text-left cursor-pointer focus:outline-none"
+            className="w-9 h-9 rounded-xl bg-white dark:bg-stone-900 border border-stone-200/90 dark:border-stone-800 p-0.5 shadow-xs flex items-center justify-center shrink-0 cursor-pointer hover:scale-105 active:scale-95 transition-transform"
+            title="RetractScan Home"
           >
-            <span className="text-base font-bold tracking-tight text-slate-900 dark:text-white whitespace-nowrap block">
+            <img
+              src="/assets/aistudio/Document_Search_Orbit_Icon_ea742aca.png"
+              alt="RetractScan - AI Academic Retraction Checker and Citation Audit Platform"
+              className="w-full h-full object-contain rounded-lg"
+            />
+          </button>
+          <button
+            onClick={() => onTabChange('home')}
+            className="text-left cursor-pointer focus:outline-none group"
+          >
+            <span className="text-base font-bold tracking-tight text-stone-900 dark:text-stone-100 whitespace-nowrap block group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
               RetractScan
             </span>
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 block whitespace-nowrap font-medium -mt-0.5">
-              Journal Editorial Citation Audit
+            <span className="text-[10.5px] text-stone-500 dark:text-stone-400 block whitespace-nowrap font-medium -mt-0.5">
+              Academic Citation Integrity Suite
             </span>
           </button>
         </div>
 
         {/* Zone 2: Navigation links */}
-        <nav className="hidden md:flex items-center gap-5 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+        <nav className="hidden lg:flex items-center gap-4 text-xs font-medium text-stone-600 dark:text-stone-400 overflow-x-auto py-1">
           <button
             onClick={() => onTabChange('home')}
-            className={`whitespace-nowrap transition-colors py-1 cursor-pointer border-b-2 flex items-center gap-1.5 ${
+            className={`whitespace-nowrap transition-all duration-200 py-1 cursor-pointer border-b-2 flex items-center gap-1.5 hover:-translate-y-0.5 active:translate-y-0 ${
               activeTab === 'home'
-                ? 'text-slate-900 dark:text-white border-slate-900 dark:border-slate-100'
-                : 'border-transparent hover:text-slate-900 dark:hover:text-white'
+                ? 'text-stone-900 dark:text-white border-stone-900 dark:border-stone-100 font-semibold'
+                : 'border-transparent hover:text-stone-900 dark:hover:text-white'
             }`}
           >
             <Home className="w-3.5 h-3.5" />
@@ -58,10 +68,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           <button
             onClick={() => onTabChange('journal')}
-            className={`whitespace-nowrap transition-colors py-1 cursor-pointer border-b-2 ${
+            className={`whitespace-nowrap transition-all duration-200 py-1 cursor-pointer border-b-2 hover:-translate-y-0.5 active:translate-y-0 ${
               activeTab === 'journal'
-                ? 'text-slate-900 dark:text-white border-slate-900 dark:border-slate-100'
-                : 'border-transparent hover:text-slate-900 dark:hover:text-white'
+                ? 'text-stone-900 dark:text-white border-stone-900 dark:border-stone-100 font-semibold'
+                : 'border-transparent hover:text-stone-900 dark:hover:text-white'
             }`}
           >
             Journal Audit
@@ -69,26 +79,37 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           <button
             onClick={() => onTabChange('single')}
-            className={`whitespace-nowrap transition-colors py-1 cursor-pointer border-b-2 ${
+            className={`whitespace-nowrap transition-all duration-200 py-1 cursor-pointer border-b-2 hover:-translate-y-0.5 active:translate-y-0 ${
               activeTab === 'single'
-                ? 'text-slate-900 dark:text-white border-slate-900 dark:border-slate-100'
-                : 'border-transparent hover:text-slate-900 dark:hover:text-white'
+                ? 'text-stone-900 dark:text-white border-stone-900 dark:border-stone-100 font-semibold'
+                : 'border-transparent hover:text-stone-900 dark:hover:text-white'
             }`}
           >
-            Single Article
+            Single DOI
+          </button>
+
+          <button
+            onClick={() => onTabChange('preflight')}
+            className={`whitespace-nowrap transition-all duration-200 py-1 cursor-pointer border-b-2 flex items-center gap-1 hover:-translate-y-0.5 active:translate-y-0 ${
+              activeTab === 'preflight'
+                ? 'text-emerald-800 dark:text-emerald-300 border-emerald-600 dark:border-emerald-400 font-semibold'
+                : 'border-transparent hover:text-stone-900 dark:hover:text-white'
+            }`}
+          >
+            <span>Pre-Flight</span>
           </button>
 
           {(fullTextCount > 0 || activeTab === 'fulltext') && (
             <button
               onClick={() => onTabChange('fulltext')}
-              className={`whitespace-nowrap transition-colors py-1 cursor-pointer border-b-2 flex items-center gap-1.5 ${
+              className={`whitespace-nowrap transition-all duration-200 py-1 cursor-pointer border-b-2 flex items-center gap-1.5 hover:-translate-y-0.5 active:translate-y-0 ${
                 activeTab === 'fulltext'
-                  ? 'text-amber-800 dark:text-amber-300 border-amber-600 dark:border-amber-400 font-bold'
+                  ? 'text-amber-800 dark:text-amber-300 border-amber-600 dark:border-amber-400 font-semibold'
                   : 'text-amber-700 dark:text-amber-400 border-transparent hover:text-amber-800'
               }`}
             >
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Full-Text AI Impact</span>
+              <span>Full-Text AI</span>
               {fullTextCount > 0 && (
                 <span className="text-[10px] font-mono bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 px-1.5 py-0.2 rounded-full border border-amber-300 dark:border-amber-800">
                   {fullTextCount}
@@ -99,16 +120,16 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           <button
             onClick={() => onTabChange('history')}
-            className={`whitespace-nowrap transition-colors py-1 cursor-pointer border-b-2 flex items-center gap-1.5 ${
+            className={`whitespace-nowrap transition-all duration-200 py-1 cursor-pointer border-b-2 flex items-center gap-1.5 hover:-translate-y-0.5 active:translate-y-0 ${
               activeTab === 'history'
-                ? 'text-slate-900 dark:text-white border-slate-900 dark:border-slate-100'
-                : 'border-transparent hover:text-slate-900 dark:hover:text-white'
+                ? 'text-stone-900 dark:text-white border-stone-900 dark:border-stone-100 font-semibold'
+                : 'border-transparent hover:text-stone-900 dark:hover:text-white'
             }`}
           >
             <History className="w-3.5 h-3.5" />
-            <span>Saved Audits</span>
+            <span>Saved</span>
             {auditCount > 0 && (
-              <span className="text-[10px] font-mono bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-1.5 py-0.2 rounded-full">
+              <span className="text-[10px] font-mono bg-stone-200 dark:bg-stone-800 text-stone-700 dark:text-stone-300 px-1.5 py-0.2 rounded-full">
                 {auditCount}
               </span>
             )}
@@ -120,9 +141,13 @@ export const Navbar: React.FC<NavbarProps> = ({
           {editor.isLoggedIn ? (
             <>
               <button
-                onClick={onOpenAuth}
-                className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/80 text-xs font-medium text-slate-800 dark:text-slate-200 transition-colors whitespace-nowrap cursor-pointer"
-                title="Manage editorial profile & credentials"
+                onClick={() => onTabChange('profile')}
+                className={`flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-lg border text-xs font-medium transition-all duration-200 whitespace-nowrap cursor-pointer shadow-2xs hover:shadow-xs hover:-translate-y-0.5 active:translate-y-0 ${
+                  activeTab === 'profile'
+                    ? 'border-stone-900 bg-stone-100 dark:border-stone-100 dark:bg-stone-800 text-stone-900 dark:text-stone-100 font-semibold shadow-xs'
+                    : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/80 text-slate-800 dark:text-slate-200'
+                }`}
+                title="View your personal editorial profile, history of checks & reports"
               >
                 {editor.authProvider === 'orcid' ? (
                   <span className="w-5 h-5 rounded-full bg-[#A6CE39] text-white flex items-center justify-center font-bold text-[9px] shrink-0">
@@ -164,7 +189,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   type="button"
                   onClick={onLogout}
-                  className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer"
+                  className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-medium hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center gap-1.5 cursor-pointer"
                   title="Sign out & return to login landing page"
                 >
                   <LogOut className="w-3.5 h-3.5 text-slate-500" />
@@ -175,9 +200,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           ) : (
             <button
               onClick={onOpenAuth}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 text-xs font-semibold shadow-xs transition-colors whitespace-nowrap cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 text-xs font-semibold shadow-xs hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-200 whitespace-nowrap cursor-pointer group"
             >
-              <LogIn className="w-4 h-4" />
+              <LogIn className="w-4 h-4 group-hover:rotate-6 transition-transform" />
               <span>Sign In</span>
             </button>
           )}

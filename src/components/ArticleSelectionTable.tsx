@@ -342,7 +342,7 @@ export const ArticleSelectionTable: React.FC<ArticleSelectionTableProps> = ({
           type="button"
           onClick={onRunAudit}
           disabled={selectedCount === 0 || isAuditing}
-          className="flex items-center gap-2 px-6 py-2.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-xs transition-all cursor-pointer"
+          className="flex items-center gap-2 px-6 py-2.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-xs hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-200 cursor-pointer group"
         >
           {isAuditing ? (
             <>
@@ -351,7 +351,7 @@ export const ArticleSelectionTable: React.FC<ArticleSelectionTableProps> = ({
             </>
           ) : (
             <>
-              <ShieldAlert className="w-4 h-4" />
+              <ShieldAlert className="w-4 h-4 transition-transform group-hover:scale-110" />
               <span>Run Retraction Audit on Selected ({selectedCount})</span>
             </>
           )}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Navbar } from './components/Navbar';
+import { Navbar, NavTabType } from './components/Navbar';
 import { EditorialLoginPage } from './components/EditorialLoginPage';
 import { EditorAuthModal } from './components/EditorAuthModal';
 import { JournalSearchSection } from './components/JournalSearchSection';
@@ -9,12 +9,16 @@ import { IndividualArticleScanner } from './components/IndividualArticleScanner'
 import { AuditHistoryDrawer } from './components/AuditHistoryDrawer';
 import { FullTextAuditView } from './components/FullTextAuditView';
 import { HomePage } from './components/HomePage';
+import { PreFlightScanner } from './components/PreFlightScanner';
+import { UserProfilePage } from './components/UserProfilePage';
+import { AcademicAtmosphere } from './components/AcademicAtmosphere';
 import {
   Journal,
   ReviewArticle,
   AuditedArticleResult,
   EditorProfile,
   SavedAuditSession,
+  CitedReference,
 } from './types/academic';
 import { ShieldCheck, CheckCircle2, RotateCcw } from 'lucide-react';
 
@@ -22,20 +26,31 @@ const STORAGE_KEY_EDITOR = 'retractscan_editor_profile';
 const STORAGE_KEY_SESSIONS = 'retractscan_saved_sessions';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'home' | 'journal' | 'single' | 'history' | 'fulltext'>('home');
+  const [activeTab, setActiveTab] = useState<NavTabType>('home');
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
-  const [pendingTab, setPendingTab] = useState<'journal' | 'single' | 'history' | 'fulltext'>('journal');
+  const [pendingTab, setPendingTab] = useState<NavTabType>('journal');
   const [fullTextQueue, setFullTextQueue] = useState<AuditedArticleResult[]>([]);
   const [fullTextInitialIndex, setFullTextInitialIndex] = useState<number>(0);
 
-  // Editor profile state with persistence (default to isLoggedIn: false so user lands on Home first)
+  // Editor profile state with persistence
   const [editor, setEditor] = useState<EditorProfile>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_EDITOR);
       if (saved) {
         const parsed = JSON.parse(saved);
-        return { ...parsed, isLoggedIn: false };
+        if (parsed && typeof parsed === 'object') {
+          return {
+            name: parsed.name || '',
+            email: parsed.email || '',
+            journal: parsed.journal || '',
+            role: parsed.role || 'Integrity Editor',
+            authProvider: parsed.authProvider || 'email',
+            institution: parsed.institution || '',
+            orcid: parsed.orcid || '',
+            isLoggedIn: Boolean(parsed.isLoggedIn),
+          };
+        }
       }
     } catch (e) {
       // ignore
@@ -106,7 +121,7 @@ export default function App() {
       console.warn('OAuth URL params parse warning:', e);
     }
   }, []);
-  const handleTabChange = (tab: 'home' | 'journal' | 'single' | 'history' | 'fulltext') => {
+  const handleTabChange = (tab: NavTabType) => {
     if (tab === 'home') {
       setActiveTab('home');
       setIsSigningIn(false);
@@ -369,7 +384,10 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fafaf8] dark:bg-[#0f1115] text-slate-800 dark:text-slate-200 flex flex-col font-sans transition-colors">
+    <div className="min-h-screen bg-[#FAF9F6] dark:bg-[#121316] text-stone-800 dark:text-stone-200 flex flex-col font-sans transition-colors relative selection:bg-stone-200 dark:selection:bg-stone-800">
+      {/* Calm Ambient Academic Atmosphere with Floating Manuscript Papers and Books */}
+      <AcademicAtmosphere />
+
       {/* Top Bar Navigation */}
       <Navbar
         activeTab={activeTab}
@@ -400,6 +418,7 @@ export default function App() {
             onStartAudit={() => handleTabChange('journal')}
             onSingleArticle={() => handleTabChange('single')}
             onExploreFullText={() => handleTabChange('fulltext')}
+            onPreFlight={() => handleTabChange('preflight')}
             auditCount={savedSessions.length}
           />
         )}
@@ -472,7 +491,26 @@ export default function App() {
           />
         )}
 
-        {/* View 3: Full-Text Retraction Impact & AI Evidence Verification */}
+        {/* View 3: Pre-Submission Pre-Flight Manuscript Scanner */}
+        {activeTab === 'preflight' && (
+          <PreFlightScanner />
+        )}
+
+        {/* View 4: User Profile Page & Personal Editorial Space */}
+        {(activeTab === 'profile' || activeTab === 'history') && (
+          <UserProfilePage
+            editor={editor}
+            savedSessions={savedSessions}
+            onSelectSession={handleSelectSession}
+            onDeleteSession={handleDeleteSession}
+            onSaveProfile={handleSaveProfile}
+            onLogout={handleLogout}
+            onNavigateTab={handleTabChange}
+            onOpenEditModal={() => setIsAuthOpen(true)}
+          />
+        )}
+
+        {/* View 5: Full-Text Retraction Impact & AI Evidence Verification */}
         {activeTab === 'fulltext' && (
           <FullTextAuditView
             selectedArticles={
@@ -485,15 +523,6 @@ export default function App() {
             initialActiveIndex={fullTextInitialIndex}
             onBackToAudit={() => setActiveTab('journal')}
             editor={editor}
-          />
-        )}
-
-        {/* View 4: Saved Audit History */}
-        {activeTab === 'history' && (
-          <AuditHistoryDrawer
-            sessions={savedSessions}
-            onSelectSession={handleSelectSession}
-            onDeleteSession={handleDeleteSession}
           />
         )}
       </main>
@@ -510,7 +539,11 @@ export default function App() {
       <footer className="mt-auto border-t border-slate-200/70 dark:border-slate-800/80 py-6 text-center text-xs text-slate-500 dark:text-slate-400 no-print">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-slate-700 dark:text-slate-300" />
+            <img
+              src="/assets/aistudio/Document_Search_Orbit_Icon_ea742aca.png"
+              alt="RetractScan - Academic Citation Integrity & Retracted Paper Scanner"
+              className="w-5 h-5 object-contain rounded-sm"
+            />
             <span className="font-semibold text-slate-800 dark:text-slate-200">RetractScan</span>
             <span>· Academic Integrity & Retracted Citation Audit</span>
           </div>

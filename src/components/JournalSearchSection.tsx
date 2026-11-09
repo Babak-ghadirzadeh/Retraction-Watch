@@ -116,9 +116,9 @@ export const JournalSearchSection: React.FC<JournalSearchSectionProps> = ({
             <button
               type="submit"
               disabled={isSearching || !searchQuery.trim()}
-              className="px-5 py-2.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 disabled:opacity-40 rounded-lg shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
+              className="px-5 py-2.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 disabled:opacity-40 rounded-lg shadow-xs hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-200 flex items-center gap-1.5 cursor-pointer shrink-0 group"
             >
-              {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+              {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4 transition-transform group-hover:scale-110" />}
               <span>Search</span>
             </button>
           </div>
@@ -358,7 +358,7 @@ export const JournalSearchSection: React.FC<JournalSearchSectionProps> = ({
                 type="button"
                 onClick={handleTriggerAudit}
                 disabled={isLoadingArticles}
-                className="px-5 py-2.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 disabled:opacity-50 rounded-lg shadow-sm transition-all flex items-center gap-2 cursor-pointer"
+                className="px-5 py-2.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 disabled:opacity-50 rounded-lg shadow-xs hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-200 flex items-center gap-2 cursor-pointer group"
               >
                 {isLoadingArticles ? (
                   <>
@@ -368,7 +368,7 @@ export const JournalSearchSection: React.FC<JournalSearchSectionProps> = ({
                 ) : (
                   <>
                     <span>Scan Journal for Review Studies</span>
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                   </>
                 )}
               </button>

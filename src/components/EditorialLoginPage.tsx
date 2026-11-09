@@ -13,6 +13,8 @@ import {
   ExternalLink,
   Award,
   Sparkles,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { EditorProfile } from '../types/academic';
 import {
@@ -27,7 +29,7 @@ interface EditorialLoginPageProps {
   onBackToHome?: () => void;
 }
 
-const STORAGE_ACCOUNTS_KEY = 'retractscan_registered_accounts';
+const STORAGE_REMEMBERED_KEY = 'retractscan_remembered_credentials';
 
 export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
   onLogin,
@@ -37,36 +39,63 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
   // Mode: either 'signin' or 'signup'
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
 
-  // Form states - always empty by default for clean sign in & sign up
+  // Form states with rememberMe enabled by default
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [journal, setJournal] = useState('Academic Journal');
   const [role, setRole] = useState('Integrity Reviewer');
+  const [rememberMe, setRememberMe] = useState<boolean>(() => {
+    try {
+      const stored = localStorage.getItem('retractscan_remember_me');
+      return stored !== 'false';
+    } catch {
+      return true;
+    }
+  });
+  const [showPassword, setShowPassword] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Clear all form fields on component mount
+  // Load remembered credentials on mount (single user's device storage)
   useEffect(() => {
-    setEmail('');
-    setPassword('');
-    setConfirmPassword('');
-    setName('');
-    setErrorMessage(null);
-    setSuccessMessage(null);
-  }, []);
+    try {
+      // Purge any legacy shared accounts list for privacy
+      localStorage.removeItem('retractscan_registered_accounts');
+
+      // Populate remembered credentials if saved on this device
+      const rememberedRaw = localStorage.getItem(STORAGE_REMEMBERED_KEY);
+      if (rememberedRaw) {
+        const creds = JSON.parse(rememberedRaw);
+        if (creds?.email) setEmail(creds.email);
+        if (creds?.password) setPassword(creds.password);
+        if (creds?.name) setName(creds.name);
+      } else if (lastEditor?.email) {
+        setEmail(lastEditor.email);
+        if (lastEditor.name) setName(lastEditor.name);
+      }
+    } catch (e) {
+      console.warn('Could not read remembered credentials:', e);
+    }
+  }, [lastEditor]);
 
   const handleSwitchMode = (newMode: 'signin' | 'signup') => {
     setMode(newMode);
-    setEmail('');
-    setPassword('');
-    setConfirmPassword('');
-    setName('');
     setErrorMessage(null);
     setSuccessMessage(null);
+    if (newMode === 'signin') {
+      try {
+        const rememberedRaw = localStorage.getItem(STORAGE_REMEMBERED_KEY);
+        if (rememberedRaw) {
+          const creds = JSON.parse(rememberedRaw);
+          if (creds?.email) setEmail(creds.email);
+          if (creds?.password) setPassword(creds.password);
+        }
+      } catch (e) {}
+    }
   };
 
   // Listen for OAuth popup completion (Google & ORCID) via postMessage and localStorage
@@ -266,64 +295,45 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
     setTimeout(() => setCopiedCallback(null), 2500);
   };
 
-  // Save account to local storage cache so client remembers it across reloads
+  // Save user's own credentials to local device storage if rememberMe is enabled
   const saveAccountLocally = (profile: EditorProfile, passwordToCache?: string) => {
     try {
-      const stored = localStorage.getItem(STORAGE_ACCOUNTS_KEY);
-      let list = stored ? JSON.parse(stored) : [];
-      if (!Array.isArray(list)) list = [];
-
-      const cleanEmail = profile.email.toLowerCase().trim();
-      const existingIdx = list.findIndex((a: any) => a.email?.toLowerCase() === cleanEmail);
-
-      const entry = {
-        name: profile.name,
-        email: cleanEmail,
-        password: passwordToCache || 'editorial2026',
-        journal: profile.journal,
-        role: profile.role,
-        orcid: profile.orcid || '',
-        institution: profile.institution || '',
-        authProvider: profile.authProvider,
-      };
-
-      if (existingIdx >= 0) {
-        list[existingIdx] = entry;
+      if (rememberMe) {
+        localStorage.setItem(
+          STORAGE_REMEMBERED_KEY,
+          JSON.stringify({
+            name: profile.name,
+            email: profile.email.toLowerCase().trim(),
+            password: passwordToCache || password,
+          })
+        );
       } else {
-        list.push(entry);
+        localStorage.removeItem(STORAGE_REMEMBERED_KEY);
       }
-
-      localStorage.setItem(STORAGE_ACCOUNTS_KEY, JSON.stringify(list));
     } catch (e) {
-      console.warn('Could not cache accounts in localStorage:', e);
+      console.warn('Could not save credentials to local storage:', e);
     }
   };
 
-  // Check client-side local cache as backup
+  // Check client-side remembered account as backup if backend is offline
   const checkLocalAccounts = (cleanEmail: string, pass: string): EditorProfile | 'WRONG_PASS' | null => {
     try {
-      const stored = localStorage.getItem(STORAGE_ACCOUNTS_KEY);
-      if (!stored) return null;
-      const list = JSON.parse(stored);
-      if (!Array.isArray(list)) return null;
-
-      const found = list.find((a: any) => a.email?.toLowerCase() === cleanEmail.toLowerCase());
-      if (!found) return null;
-
-      if (found.password && found.password !== pass && pass !== 'editorial2026') {
-        return 'WRONG_PASS';
+      const remembered = localStorage.getItem(STORAGE_REMEMBERED_KEY);
+      if (!remembered) return null;
+      const creds = JSON.parse(remembered);
+      if (creds?.email?.toLowerCase() === cleanEmail.toLowerCase()) {
+        if (creds.password && creds.password !== pass) {
+          return 'WRONG_PASS';
+        }
+        return {
+          name: creds.name || 'Editorial Member',
+          email: cleanEmail,
+          journal: journal || 'Academic Journal',
+          role: role || 'Integrity Reviewer',
+          isLoggedIn: true,
+        };
       }
-
-      return {
-        name: found.name,
-        email: found.email,
-        journal: found.journal,
-        role: found.role,
-        orcid: found.orcid || '',
-        institution: found.institution || '',
-        authProvider: found.authProvider || 'email',
-        isLoggedIn: true,
-      };
+      return null;
     } catch {
       return null;
     }
@@ -387,10 +397,28 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
 
         if (data.editor) {
           saveAccountLocally(data.editor, password);
-          setSuccessMessage('Editorial account created successfully! Transitioning to suite...');
+          if (rememberMe) {
+            try {
+              localStorage.setItem('retractscan_remember_me', 'true');
+              localStorage.setItem(
+                STORAGE_REMEMBERED_KEY,
+                JSON.stringify({
+                  email: cleanEmail,
+                  password,
+                  name: data.editor.name,
+                })
+              );
+            } catch (e) {}
+          } else {
+            try {
+              localStorage.setItem('retractscan_remember_me', 'false');
+              localStorage.removeItem(STORAGE_REMEMBERED_KEY);
+            } catch (e) {}
+          }
+          setSuccessMessage('Editorial account created successfully! Credentials saved on this device.');
           setTimeout(() => {
             onLogin(data.editor);
-          }, 450);
+          }, 350);
           return;
         }
       } else {
@@ -414,6 +442,19 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
             setIsLoading(false);
             return;
           } else if (localCheck) {
+            if (rememberMe) {
+              try {
+                localStorage.setItem('retractscan_remember_me', 'true');
+                localStorage.setItem(
+                  STORAGE_REMEMBERED_KEY,
+                  JSON.stringify({
+                    email: cleanEmail,
+                    password,
+                    name: localCheck.name,
+                  })
+                );
+              } catch (e) {}
+            }
             onLogin(localCheck);
             return;
           }
@@ -425,6 +466,24 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
 
         if (data.editor) {
           saveAccountLocally(data.editor, password);
+          if (rememberMe) {
+            try {
+              localStorage.setItem('retractscan_remember_me', 'true');
+              localStorage.setItem(
+                STORAGE_REMEMBERED_KEY,
+                JSON.stringify({
+                  email: cleanEmail,
+                  password,
+                  name: data.editor.name,
+                })
+              );
+            } catch (e) {}
+          } else {
+            try {
+              localStorage.setItem('retractscan_remember_me', 'false');
+              localStorage.removeItem(STORAGE_REMEMBERED_KEY);
+            } catch (e) {}
+          }
           onLogin(data.editor);
           return;
         }
@@ -437,6 +496,19 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
         setIsLoading(false);
         return;
       } else if (localCheck) {
+        if (rememberMe) {
+          try {
+            localStorage.setItem('retractscan_remember_me', 'true');
+            localStorage.setItem(
+              STORAGE_REMEMBERED_KEY,
+              JSON.stringify({
+                email: cleanEmail,
+                password,
+                name: localCheck.name,
+              })
+            );
+          } catch (e) {}
+        }
         onLogin(localCheck);
         return;
       }
@@ -453,8 +525,12 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
       <header className="border-b border-slate-200/80 dark:border-slate-800 bg-[#fafaf8]/95 dark:bg-[#0c0e12]/95 backdrop-blur-md px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-slate-900 dark:bg-slate-800 text-white flex items-center justify-center shadow-xs">
-              <ShieldCheck className="w-5 h-5 text-slate-100" />
+            <div className="w-10 h-10 rounded-xl bg-white dark:bg-stone-900 border border-slate-200/90 dark:border-slate-800 p-0.5 shadow-xs flex items-center justify-center shrink-0">
+              <img
+                src="/assets/aistudio/Document_Search_Orbit_Icon_ea742aca.png"
+                alt="RetractScan Logo"
+                className="w-full h-full object-contain rounded-lg"
+              />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -483,10 +559,10 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
               <button
                 type="button"
                 onClick={onBackToHome}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer shadow-2xs hover:shadow-xs"
                 title="Return to RetractScan Home page"
               >
-                <ArrowLeft className="w-3.5 h-3.5" />
+                <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
                 <span>Return to Home</span>
               </button>
             )}
@@ -496,7 +572,7 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
 
       {/* Main Authentication Card */}
       <main className="max-w-md w-full mx-auto px-4 py-8 sm:py-10 my-auto">
-        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl">
           {/* Card Header & Mode Switcher */}
           <div className="p-6 sm:p-7 border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-center">
             <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">
@@ -513,10 +589,10 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
               <button
                 type="button"
                 onClick={() => handleSwitchMode('signin')}
-                className={`py-2 px-3 rounded-lg transition-all cursor-pointer ${
+                className={`py-2 px-3 rounded-lg transition-all duration-200 cursor-pointer ${
                   mode === 'signin'
                     ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs font-bold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50'
                 }`}
               >
                 Sign In
@@ -524,10 +600,10 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
               <button
                 type="button"
                 onClick={() => handleSwitchMode('signup')}
-                className={`py-2 px-3 rounded-lg transition-all cursor-pointer ${
+                className={`py-2 px-3 rounded-lg transition-all duration-200 cursor-pointer ${
                   mode === 'signup'
                     ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs font-bold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50'
                 }`}
               >
                 Sign Up
@@ -544,10 +620,10 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
                 type="button"
                 disabled={isLoading}
                 onClick={handleGoogleClick}
-                className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-900 dark:text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-900 dark:text-white text-xs font-semibold shadow-xs hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] transition-all duration-200 cursor-pointer"
                 title={mode === 'signup' ? 'Create editorial account with Google Identity' : 'Authenticate with your verified Google account'}
               >
-                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover:scale-110" viewBox="0 0 24 24">
                   <path
                     fill="#4285F4"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -573,10 +649,10 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
                 type="button"
                 disabled={isLoading}
                 onClick={handleOrcidClick}
-                className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-xl border border-[#A6CE39]/70 bg-gradient-to-r from-emerald-50/50 to-lime-50/30 dark:from-emerald-950/20 dark:to-lime-950/10 hover:border-[#A6CE39] hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-slate-900 dark:text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-xl border border-[#A6CE39]/70 bg-gradient-to-r from-emerald-50/50 to-lime-50/30 dark:from-emerald-950/20 dark:to-lime-950/10 hover:border-[#A6CE39] hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-slate-900 dark:text-white text-xs font-semibold shadow-xs hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] transition-all duration-200 cursor-pointer"
                 title={mode === 'signup' ? 'Create editorial account with verified 16-digit ORCID iD' : 'Authenticate with your verified 16-digit ORCID iD'}
               >
-                <span className="w-4.5 h-4.5 rounded-full bg-[#A6CE39] text-white flex items-center justify-center font-bold text-[9px] shrink-0">
+                <span className="w-4.5 h-4.5 rounded-full bg-[#A6CE39] text-white flex items-center justify-center font-bold text-[9px] shrink-0 shadow-xs">
                   iD
                 </span>
                 <span>{mode === 'signup' ? 'Sign up with ORCID' : 'Sign in with ORCID'}</span>
@@ -731,6 +807,8 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
               <div className="border-t border-slate-200 dark:border-slate-800 w-full" />
             </div>
 
+
+
             {/* Error & Success Feedback Banners */}
             {errorMessage && (
               <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-2.5 animate-in fade-in duration-200">
@@ -746,19 +824,31 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
               </div>
             )}
 
-            {/* Email Form */}
-            <form onSubmit={handleSubmit} className="space-y-3.5">
+            {/* Standard HTML5 Compliant Email Form (Triggers native browser password managers) */}
+            <form
+              method="post"
+              action="#"
+              autoComplete="on"
+              onSubmit={handleSubmit}
+              className="space-y-3.5"
+            >
               {/* Extra registration fields */}
               {mode === 'signup' && (
                 <>
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    <label
+                      htmlFor="editorial-login-name"
+                      className="text-xs font-semibold text-slate-700 dark:text-slate-300"
+                    >
                       Full Name & Academic Title
                     </label>
                     <div className="relative">
                       <User className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                       <input
+                        id="editorial-login-name"
+                        name="name"
                         type="text"
+                        autoComplete="name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="e.g. Dr. Jane Smith"
@@ -767,19 +857,24 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
                       />
                     </div>
                   </div>
-
                 </>
               )}
 
               {/* Email Address */}
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                <label
+                  htmlFor="editorial-login-email"
+                  className="text-xs font-semibold text-slate-700 dark:text-slate-300"
+                >
                   Email Address
                 </label>
                 <div className="relative">
                   <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                   <input
+                    id="editorial-login-email"
+                    name="email"
                     type="email"
+                    autoComplete="username"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@organization.edu"
@@ -792,57 +887,95 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
               {/* Password */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  <label
+                    htmlFor="editorial-login-password"
+                    className="text-xs font-semibold text-slate-700 dark:text-slate-300"
+                  >
                     Password
                   </label>
                 </div>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                   <input
-                    type="password"
+                    id="editorial-login-password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••••••"
-                    className="w-full pl-9.5 pr-3.5 py-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-100"
+                    className="w-full pl-9.5 pr-10 py-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-100"
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-2.5 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
 
               {/* Confirm Password (only on Sign Up) */}
               {mode === 'signup' && (
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  <label
+                    htmlFor="editorial-login-confirm-password"
+                    className="text-xs font-semibold text-slate-700 dark:text-slate-300"
+                  >
                     Confirm Password
                   </label>
                   <div className="relative">
                     <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                     <input
-                      type="password"
+                      id="editorial-login-confirm-password"
+                      name="confirmPassword"
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="new-password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="••••••••••••"
-                      className="w-full pl-9.5 pr-3.5 py-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-100"
+                      className="w-full pl-9.5 pr-10 py-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-100"
                       required
                     />
                   </div>
                 </div>
               )}
 
+              {/* Remember Me Checkbox */}
+              <div className="flex items-center justify-between pt-1">
+                <label
+                  htmlFor="editorial-remember-me"
+                  className="flex items-center gap-2 cursor-pointer text-xs text-slate-600 dark:text-slate-300 select-none"
+                >
+                  <input
+                    id="editorial-remember-me"
+                    name="rememberMe"
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="w-3.5 h-3.5 rounded border-slate-300 text-slate-900 focus:ring-slate-500 accent-slate-900 dark:accent-slate-100 cursor-pointer"
+                  />
+                  <span>Save & remember my login on this device</span>
+                </label>
+              </div>
+
               {/* Submit Button */}
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold text-xs shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer mt-2"
+                className="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold text-xs shadow-xs hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer mt-2 group"
               >
                 {isLoading ? (
-                  <span>Authenticating...</span>
+                  <span>Authenticating & Saving...</span>
                 ) : (
                   <>
                     <span>
-                      {mode === 'signin' ? 'Sign In' : 'Create Account'}
+                      {mode === 'signin' ? 'Sign In' : 'Create Account & Save'}
                     </span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1" />
                   </>
                 )}
               </button>
@@ -856,7 +989,7 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
                   <button
                     type="button"
                     onClick={() => handleSwitchMode('signup')}
-                    className="text-slate-900 dark:text-white font-semibold underline hover:no-underline cursor-pointer"
+                    className="text-slate-900 dark:text-white font-semibold underline hover:no-underline cursor-pointer hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors"
                   >
                     Sign up with email
                   </button>
@@ -867,7 +1000,7 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
                   <button
                     type="button"
                     onClick={() => handleSwitchMode('signin')}
-                    className="text-slate-900 dark:text-white font-semibold underline hover:no-underline cursor-pointer"
+                    className="text-slate-900 dark:text-white font-semibold underline hover:no-underline cursor-pointer hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors"
                   >
                     Sign in with email
                   </button>
@@ -887,7 +1020,13 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
       <footer className="border-t border-slate-200/80 dark:border-slate-800 py-5 text-center text-xs text-slate-500 dark:text-slate-400">
         <div className="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-slate-700 dark:text-slate-300" />
+            <div className="w-4 h-4 rounded bg-white dark:bg-stone-900 border border-slate-200 dark:border-slate-800 p-0.5 flex items-center justify-center shrink-0">
+              <img
+                src="/assets/aistudio/Document_Search_Orbit_Icon_ea742aca.png"
+                alt="RetractScan Icon"
+                className="w-full h-full object-contain"
+              />
+            </div>
             <span className="font-semibold text-slate-800 dark:text-slate-200">RetractScan</span>
             <span>· Academic Retraction Identification Engine</span>
           </div>

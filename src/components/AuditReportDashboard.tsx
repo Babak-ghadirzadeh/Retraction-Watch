@@ -167,10 +167,10 @@ export const AuditReportDashboard: React.FC<AuditReportDashboardProps> = ({
           <button
             type="button"
             onClick={() => setFilterMode('all')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-200 cursor-pointer ${
               filterMode === 'all'
-                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs scale-[1.02]'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             All Studies ({totalArticles})
@@ -178,9 +178,9 @@ export const AuditReportDashboard: React.FC<AuditReportDashboardProps> = ({
           <button
             type="button"
             onClick={() => setFilterMode('flagged')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
               filterMode === 'flagged'
-                ? 'bg-white dark:bg-slate-900 text-rose-700 dark:text-rose-300 shadow-xs'
+                ? 'bg-white dark:bg-slate-900 text-rose-700 dark:text-rose-300 shadow-xs scale-[1.02]'
                 : 'text-slate-600 dark:text-slate-300 hover:text-rose-700'
             }`}
           >
@@ -190,9 +190,9 @@ export const AuditReportDashboard: React.FC<AuditReportDashboardProps> = ({
           <button
             type="button"
             onClick={() => setFilterMode('clean')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
               filterMode === 'clean'
-                ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-300 shadow-xs'
+                ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-300 shadow-xs scale-[1.02]'
                 : 'text-slate-600 dark:text-slate-300 hover:text-emerald-700'
             }`}
           >
@@ -213,10 +213,10 @@ export const AuditReportDashboard: React.FC<AuditReportDashboardProps> = ({
                     : auditResults.filter((a) => a.hasRetractedCitation);
                 onStartFullTextAudit(targetArticles.length > 0 ? targetArticles : auditResults);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white shadow-xs transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white shadow-xs hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-200 cursor-pointer group"
               title="Launch full-text AI evaluation to check data-contribution status and sentence-level effects"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-200" />
+              <Sparkles className="w-3.5 h-3.5 text-amber-200 transition-transform group-hover:rotate-12 group-hover:scale-110" />
               <span>Analyze Full-Text Impact (AI) ({selectedArticlesForAudit.length})</span>
             </button>
           )}
@@ -224,7 +224,7 @@ export const AuditReportDashboard: React.FC<AuditReportDashboardProps> = ({
           <button
             type="button"
             onClick={onSaveToHistory}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-200 cursor-pointer shadow-2xs hover:shadow-xs"
             title="Save this audit to your persistent editor records"
           >
             <Save className="w-3.5 h-3.5 text-slate-500" />
@@ -234,7 +234,7 @@ export const AuditReportDashboard: React.FC<AuditReportDashboardProps> = ({
           <button
             type="button"
             onClick={handleDownloadCsv}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-200 cursor-pointer shadow-2xs hover:shadow-xs"
             title="Download complete CSV spreadsheet for editorial assessment"
           >
             <FileDown className="w-3.5 h-3.5 text-slate-500" />
@@ -244,7 +244,7 @@ export const AuditReportDashboard: React.FC<AuditReportDashboardProps> = ({
           <button
             type="button"
             onClick={handlePrint}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 shadow-xs transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 shadow-xs hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-200 cursor-pointer"
             title="Open printable editorial assessment sheet (PDF export)"
           >
             <Printer className="w-3.5 h-3.5" />

@@ -139,4 +139,64 @@ export interface FullTextAuditAnalysis {
   recommendations: EditorialRecommendation[];
 }
 
+export interface PreFlightReferenceItem {
+  doi?: string;
+  pmid?: string;
+  title: string;
+  author?: string;
+  year?: string;
+  status: 'clean' | 'retracted' | 'pre_retraction_flag';
+  retractionDetails?: CitedReference;
+}
+
+export interface PreFlightReport {
+  id: string;
+  manuscriptTitle?: string;
+  fileName: string;
+  fileType: string;
+  scannedAt: string;
+  totalReferencesFound: number;
+  cleanCount: number;
+  retractedCount: number;
+  postRetractionCount: number;
+  integrityScore: number;
+  badge: 'VERIFIED_CLEAN' | 'CAUTION_ALERT' | 'CRITICAL_CONTAMINATION';
+  retractedCitations: CitedReference[];
+  allReferences: PreFlightReferenceItem[];
+}
+
+export interface EditorialNotice {
+  id: string;
+  noticeType: 'expression_of_concern' | 'corrigendum_request' | 'author_inquiry' | 'retraction_notice';
+  journalName: string;
+  issn?: string;
+  editorName: string;
+  editorRole: string;
+  articleTitle: string;
+  articleDoi: string;
+  authorsString: string;
+  retractedStudies: CitedReference[];
+  copeGuidelineRef: string;
+  customBodyText: string;
+  deadlineDate?: string;
+  actionRequired: string;
+  createdAt: string;
+}
+
+export interface PortfolioBenchmarkJournal {
+  id: string;
+  journalName: string;
+  issn: string;
+  publisher: string;
+  category: string;
+  reviewsAnalyzed: number;
+  citationContaminationRate: number; // percentage
+  postRetractionRate: number; // percentage
+  averageCitationLagMonths: number;
+  prismaComplianceScore: number;
+  integrityGrade: 'A+' | 'A' | 'B+' | 'B' | 'C';
+  flaggedCitationsCount: number;
+  status: 'Monitored' | 'Pending Audit' | 'Critical Flag';
+}
+
 
