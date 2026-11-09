@@ -39,9 +39,9 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
   );
   const [isEditingExisting, setIsEditingExisting] = useState(false);
 
-  // Form states
-  const [name, setName] = useState(editor.name || '');
-  const [email, setEmail] = useState(editor.email || '');
+  // Form states strictly empty
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -49,14 +49,14 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
   const [role, setRole] = useState(editor.role || 'Senior Integrity Editor');
   const [orcid, setOrcid] = useState(editor.orcid || '');
   const [institution, setInstitution] = useState(editor.institution || '');
-  const [rememberMe, setRememberMe] = useState(true);
+  const [rememberMe, setRememberMe] = useState(false);
 
   // Status & error feedback
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Reset or pre-fill form when modal opens
+  // Reset form when modal opens ensuring email and password fields are strictly blank
   useEffect(() => {
     if (isOpen) {
       setErrorMessage(null);
@@ -68,30 +68,12 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
       setOrcid(editor.isLoggedIn ? (editor.orcid || '') : '');
       setInstitution(editor.isLoggedIn ? (editor.institution || '') : '');
 
-      if (editor.isLoggedIn) {
-        setEmail(editor.email || '');
-        setPassword('');
-      } else {
-        // Pre-fill remembered credentials if available
-        try {
-          const remembered = localStorage.getItem(STORAGE_REMEMBERED_KEY);
-          if (remembered) {
-            const creds = JSON.parse(remembered);
-            if (creds?.email) setEmail(creds.email);
-            if (creds?.password) setPassword(creds.password);
-            if (creds?.name && !name) setName(creds.name);
-          } else {
-            setEmail(editor.email || '');
-            setPassword('');
-          }
-        } catch {
-          setEmail(editor.email || '');
-          setPassword('');
-        }
-      }
+      // Keep email, password, and confirm password empty when not written by user
+      setEmail('');
+      setPassword('');
       setConfirmPassword('');
     }
-  }, [isOpen, editor]);
+  }, [isOpen, editor.isLoggedIn]);
 
   // Listen for OAuth popup completion
   useEffect(() => {
@@ -512,6 +494,10 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
                   type="button"
                   onClick={() => {
                     setAuthMode('signin');
+                    setEmail('');
+                    setPassword('');
+                    setConfirmPassword('');
+                    setName('');
                     setErrorMessage(null);
                   }}
                   className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
@@ -526,6 +512,10 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
                   type="button"
                   onClick={() => {
                     setAuthMode('signup');
+                    setEmail('');
+                    setPassword('');
+                    setConfirmPassword('');
+                    setName('');
                     setErrorMessage(null);
                   }}
                   className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
@@ -613,11 +603,11 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
                         id="modal-login-email"
                         name="email"
                         type="email"
-                        autoComplete="username"
+                        autoComplete="off"
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="editor@thelancet.com"
+                        placeholder="editor@organization.edu"
                         className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500 focus:border-slate-400 focus:outline-none"
                       />
                     </div>
@@ -638,11 +628,11 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
                         id="modal-login-password"
                         name="password"
                         type={showPassword ? 'text' : 'password'}
-                        autoComplete="current-password"
+                        autoComplete="off"
                         required
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        placeholder="••••••••"
+                        placeholder="Enter your password"
                         className="w-full pl-9 pr-10 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500 focus:border-slate-400 focus:outline-none"
                       />
                       <button
@@ -723,7 +713,7 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
                         id="modal-reg-email"
                         name="email"
                         type="email"
-                        autoComplete="username"
+                        autoComplete="off"
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -747,11 +737,11 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
                           id="modal-reg-password"
                           name="password"
                           type={showPassword ? 'text' : 'password'}
-                          autoComplete="new-password"
+                          autoComplete="off"
                           required
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          placeholder="••••••••"
+                          placeholder="Enter your password"
                           className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500 focus:border-slate-400 focus:outline-none"
                         />
                       </div>
@@ -770,11 +760,11 @@ export const EditorAuthModal: React.FC<EditorAuthModalProps> = ({
                           id="modal-reg-confirmpassword"
                           name="confirm-password"
                           type={showPassword ? 'text' : 'password'}
-                          autoComplete="new-password"
+                          autoComplete="off"
                           required
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
-                          placeholder="••••••••"
+                          placeholder="Confirm your password"
                           className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500 focus:border-slate-400 focus:outline-none"
                         />
                       </div>

@@ -39,63 +39,44 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
   // Mode: either 'signin' or 'signup'
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
 
-  // Form states with rememberMe enabled by default
+  // Form states initialized strictly empty
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [journal, setJournal] = useState('Academic Journal');
   const [role, setRole] = useState('Integrity Reviewer');
-  const [rememberMe, setRememberMe] = useState<boolean>(() => {
-    try {
-      const stored = localStorage.getItem('retractscan_remember_me');
-      return stored !== 'false';
-    } catch {
-      return true;
-    }
-  });
+  const [rememberMe, setRememberMe] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Load remembered credentials on mount (single user's device storage)
+  // Ensure email and password fields remain strictly empty when the user has not written anything yet
   useEffect(() => {
     try {
       // Purge any legacy shared accounts list for privacy
       localStorage.removeItem('retractscan_registered_accounts');
-
-      // Populate remembered credentials if saved on this device
-      const rememberedRaw = localStorage.getItem(STORAGE_REMEMBERED_KEY);
-      if (rememberedRaw) {
-        const creds = JSON.parse(rememberedRaw);
-        if (creds?.email) setEmail(creds.email);
-        if (creds?.password) setPassword(creds.password);
-        if (creds?.name) setName(creds.name);
-      } else if (lastEditor?.email) {
-        setEmail(lastEditor.email);
-        if (lastEditor.name) setName(lastEditor.name);
-      }
+      // Keep inputs completely blank until user writes into them
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+      setName('');
     } catch (e) {
-      console.warn('Could not read remembered credentials:', e);
+      console.warn('Could not reset form fields:', e);
     }
-  }, [lastEditor]);
+  }, []);
 
   const handleSwitchMode = (newMode: 'signin' | 'signup') => {
     setMode(newMode);
     setErrorMessage(null);
     setSuccessMessage(null);
-    if (newMode === 'signin') {
-      try {
-        const rememberedRaw = localStorage.getItem(STORAGE_REMEMBERED_KEY);
-        if (rememberedRaw) {
-          const creds = JSON.parse(rememberedRaw);
-          if (creds?.email) setEmail(creds.email);
-          if (creds?.password) setPassword(creds.password);
-        }
-      } catch (e) {}
-    }
+    // Keep email and password empty when toggling between sign in and sign up
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setName('');
   };
 
   // Listen for OAuth popup completion (Google & ORCID) via postMessage and localStorage
@@ -874,7 +855,7 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
                     id="editorial-login-email"
                     name="email"
                     type="email"
-                    autoComplete="username"
+                    autoComplete="off"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@organization.edu"
@@ -900,10 +881,10 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
                     id="editorial-login-password"
                     name="password"
                     type={showPassword ? 'text' : 'password'}
-                    autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                    autoComplete="off"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••••••"
+                    placeholder="Enter your password"
                     className="w-full pl-9.5 pr-10 py-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-100"
                     required
                   />
@@ -933,10 +914,10 @@ export const EditorialLoginPage: React.FC<EditorialLoginPageProps> = ({
                       id="editorial-login-confirm-password"
                       name="confirmPassword"
                       type={showPassword ? 'text' : 'password'}
-                      autoComplete="new-password"
+                      autoComplete="off"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="••••••••••••"
+                      placeholder="Confirm your password"
                       className="w-full pl-9.5 pr-10 py-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-100"
                       required
                     />
