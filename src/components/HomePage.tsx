@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ShieldCheck,
   Search,
@@ -18,6 +18,10 @@ import {
   Download,
   FileCheck,
   ChevronDown,
+  X,
+  ArrowUpRight,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 interface HomePageProps {
@@ -64,6 +68,26 @@ export const HomePage: React.FC<HomePageProps> = ({
   auditCount = 0,
 }) => {
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+  const [activeModal, setActiveModal] = useState<'workflow' | 'methodology' | 'audience' | 'faq' | null>(null);
+  const [capabilitySlide, setCapabilitySlide] = useState<number>(0);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setActiveModal(null);
+      }
+    };
+    if (activeModal) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [activeModal]);
 
   const scrollToDevelopers = () => {
     const el = document.getElementById('meet-the-developers');
@@ -74,17 +98,59 @@ export const HomePage: React.FC<HomePageProps> = ({
 
   return (
     <div className="space-y-16 pb-12 animate-in fade-in duration-300">
-      {/* Hero Section */}
-      <section className="relative pt-6 pb-12 border-b border-stone-200/80 dark:border-stone-800">
+      {/* Full Header of the Homepage: Brand Component Masthead & Academic Integrity Hero */}
+      <header className="relative pt-2 pb-12 border-b border-stone-200/80 dark:border-stone-800">
+        {/* Full Brand Component Banner */}
+        <div className="mb-8 p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-stone-100/90 via-emerald-50/40 to-stone-100/90 dark:from-stone-900/90 dark:via-emerald-950/20 dark:to-stone-900/90 border border-stone-200/90 dark:border-stone-800 shadow-xs backdrop-blur-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+          <div className="flex items-center gap-4 sm:gap-5">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/90 dark:border-stone-750 p-2 shadow-md flex items-center justify-center shrink-0 hover:scale-105 transition-transform duration-300">
+              <img
+                src="/assets/aistudio/Document_Search_Orbit_Icon_ea742aca.png"
+                alt="RetractScan - AI Academic Retraction Checker and Citation Audit Platform"
+                className="w-full h-full object-contain rounded-xl"
+              />
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="text-2xl sm:text-3xl font-black tracking-tight text-stone-900 dark:text-stone-100">
+                  RetractScan
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-100/80 dark:bg-emerald-950/80 border border-emerald-300/80 dark:border-emerald-800 text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  Official Integrity Suite
+                </span>
+              </div>
+              <span className="text-xs sm:text-sm font-semibold text-stone-600 dark:text-stone-300 block mt-0.5">
+                Academic Citation Integrity Suite
+              </span>
+              <div className="flex flex-wrap items-center gap-2 text-[11.5px] text-stone-500 dark:text-stone-400 mt-1.5 font-medium">
+                <span>Crossref REST API</span>
+                <span>·</span>
+                <span>PubMed E-Utilities</span>
+                <span>·</span>
+                <span>OpenAlex Knowledge Graph</span>
+                <span>·</span>
+                <span>COPE Guidelines Compliant</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="hidden md:flex items-center gap-3 shrink-0">
+            <div className="text-right">
+              <span className="text-[10px] uppercase tracking-wider text-stone-400 dark:text-stone-500 font-bold block">
+                Verification Engine
+              </span>
+              <span className="text-xs font-bold text-stone-800 dark:text-stone-200 font-mono">
+                Live Retraction Index
+              </span>
+            </div>
+            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" title="System Operational" />
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           {/* Left Column: Heading and Action Buttons */}
           <div className="lg:col-span-7">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-stone-100 dark:bg-stone-800/80 border border-stone-200 dark:border-stone-700 text-xs font-semibold text-stone-700 dark:text-stone-300 mb-6">
-              <span>Automated Academic Integrity &amp; Citation Auditing Suite</span>
-              <span aria-hidden="true">·</span>
-              <span>COPE &amp; PRISMA Protocol</span>
-            </div>
-
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-stone-900 dark:text-stone-100 leading-[1.18] text-balance">
               Academic Paper Integrity Tool and Retraction Audit Platform
             </h1>
@@ -253,314 +319,457 @@ export const HomePage: React.FC<HomePageProps> = ({
             <p className="text-[11px] text-slate-400 mt-0.5">Pre-drafted errata & notices</p>
           </div>
         </div>
-      </section>
+      </header>
 
-      {/* Core Capabilities Section */}
-      <section className="space-y-6">
-        <div className="animate-float-in-place-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Platform Capabilities
-          </span>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-            End-to-End Journal Citation Quality Assurance
-          </h2>
-          <p className="text-sm text-slate-600 dark:text-slate-300 mt-1 max-w-2xl">
-            RetractScan provides journal editors, publishers, and peer reviewers with the tools needed to detect,
-            evaluate, and remediate citations to retracted literature before or after publication.
+      {/* Sliding Mini Pages: Core Capabilities Section */}
+      <section className="space-y-3">
+        {/* Header with Title */}
+        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Platform Capabilities
+              </span>
+              <span className="text-slate-300 dark:text-slate-700">·</span>
+              <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500">
+                5 Modules
+              </span>
+            </div>
+            <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white mt-0.5 tracking-tight">
+              End-to-End Journal Citation Quality Assurance
+            </h2>
+          </div>
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md hidden md:block">
+            Specialized tools to detect, evaluate, and remediate citations to retracted literature.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {/* Card 1 */}
-          <div className="p-5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 space-y-3">
-            <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-800 dark:text-slate-200">
-              <Layers className="w-5 h-5" />
-            </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">
-              1. Secondary Literature Heuristics
-            </h3>
-            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              Multi-layer detection isolates systematic reviews, meta-analyses, and clinical guidelines using PubMed publication types, MeSH terms, title/abstract linguistic markers, and PRISMA indicators.
-            </p>
-          </div>
-
-          {/* Card 2 */}
-          <div className="p-5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 space-y-3">
-            <div className="w-9 h-9 rounded-lg bg-rose-50 dark:bg-rose-950/60 flex items-center justify-center text-rose-700 dark:text-rose-400">
-              <AlertTriangle className="w-5 h-5" />
-            </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">
-              2. Multi-Registry Retraction Cross-Check
-            </h3>
-            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              Live automated cross-referencing against Crossref event streams, OpenAlex, and PubMed retraction notices, accurately establishing publication dates to pinpoint post-retraction citing.
-            </p>
-          </div>
-
-          {/* Card 3 */}
-          <div className="p-5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 space-y-3">
-            <div className="w-9 h-9 rounded-lg bg-amber-50 dark:bg-amber-950/60 flex items-center justify-center text-amber-700 dark:text-amber-400">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">
-              3. AI Data-Contribution Verification
-            </h3>
-            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              Gemini 3.8 Flash parses the full manuscript to verify whether the retracted trial is a data-contributing study to pooled effect sizes or merely cited as background context in the discussion.
-            </p>
-          </div>
-
-          {/* Card 4 */}
-          <div className="p-5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 space-y-3">
-            <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-700 dark:text-emerald-400">
-              <Award className="w-5 h-5" />
-            </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">
-              4. COPE Editorial Recommendations
-            </h3>
-            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              Actionable guidance aligned with Committee on Publication Ethics (COPE) protocols: author sensitivity re-analysis, formal Corrigendum/Erratum issuance, or Expressions of Concern.
-            </p>
-          </div>
-
-          {/* Card 5: Pre-Flight Manuscript Scanner */}
-          <div className="p-5 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-700 dark:text-emerald-400">
-                <FileCheck className="w-5 h-5" />
-              </div>
-              {onPreFlight && (
-                <button
-                  type="button"
-                  onClick={onPreFlight}
-                  className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 hover:underline hover:-translate-y-0.5 active:translate-y-0 transition-transform cursor-pointer"
-                >
-                  Open Scanner →
-                </button>
-              )}
-            </div>
-            <h3 className="text-base font-bold text-stone-900 dark:text-stone-100">
-              5. Pre-Submission Pre-Flight Scanner
-            </h3>
-            <p className="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
-              Drag-and-drop Word (.docx) manuscripts, PDFs, or pasted reference lists. Generates a verifiable Pre-Flight Citation Health Certificate before paper acceptance.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works Flow */}
-      <section className="p-6 sm:p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs animate-float-in-place-3">
-        <div className="max-w-2xl">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            Editorial Workflow
-          </span>
-          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-1">
-            Three Steps to Full Retraction Safeguarding
-          </h2>
+        {/* Quick Mini Page Selector Tabs */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none text-[11px]">
+          {[
+            { id: 0, num: '01', label: 'Heuristics' },
+            { id: 1, num: '02', label: 'Cross-Check' },
+            { id: 2, num: '03', label: 'AI Verification' },
+            { id: 3, num: '04', label: 'COPE Protocols' },
+            { id: 4, num: '05', label: 'Pre-Flight Scanner' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setCapabilitySlide(tab.id)}
+              className={`px-2.5 py-1 rounded-md whitespace-nowrap transition-all cursor-pointer shrink-0 border text-[11px] ${
+                capabilitySlide === tab.id
+                  ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 border-slate-900 dark:border-slate-100 font-medium shadow-2xs'
+                  : 'bg-transparent text-slate-500 dark:text-slate-400 border-transparent hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+              }`}
+            >
+              <span className="font-mono text-[9px] mr-1 opacity-70">{tab.num}</span>
+              <span>{tab.label}</span>
+            </button>
+          ))}
         </div>
 
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6 relative">
-          <div className="space-y-2">
-            <div className="w-7 h-7 rounded-full bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-bold text-xs flex items-center justify-center">
-              1
-            </div>
-            <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-              Scan Journal or Review DOI
-            </h4>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-              Query any peer-reviewed journal by title or ISSN over a custom year window, or enter a single review DOI to index all referenced bibliography DOIs.
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <div className="w-7 h-7 rounded-full bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-bold text-xs flex items-center justify-center">
-              2
-            </div>
-            <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-              Ingest Manuscript & Run AI Audit
-            </h4>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-              Upload PDF, DOCX, or text files for reviews that cite retracted studies. Gemini analyzes exact citation sentences to distinguish background mentions from pooled quantitative effect sizes.
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <div className="w-7 h-7 rounded-full bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-bold text-xs flex items-center justify-center">
-              3
-            </div>
-            <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-              Record Notes & Export Dossier
-            </h4>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-              Add user editorial assessments, assign COPE recommendations, and export formatted PDF Retraction Dossiers or CSV reports for editorial board action.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Four-Layer Retraction Detection Methodology Section */}
-      <section className="space-y-6 pt-4 border-t border-stone-200/80 dark:border-stone-800">
-        <div className="max-w-3xl">
-          <span className="text-xs font-bold uppercase tracking-wider text-stone-500">
-            Empirical Architecture
-          </span>
-          <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 dark:text-stone-100 mt-1">
-            Four-Layer Retraction Detection Methodology
-          </h2>
-          <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 mt-1.5 leading-relaxed">
-            RetractScan synthesizes four independent bibliographic registries and clinical retraction notice feeds in real time, capturing 100% of verified notices with zero false positives.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-5 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 shadow-xs space-y-2.5 hover:-translate-y-0.5 transition-transform duration-200">
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-mono text-xs font-bold border border-emerald-200 dark:border-emerald-900">
-              01
-            </div>
-            <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100">
-              Layer 1: Crossref REST API Retraction Index
-            </h3>
-            <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
-              Continuous synchronization with publisher Crossmark update streams, parsing official retraction notices, expressions of concern, and author corrigenda directly from primary deposits.
-            </p>
-          </div>
-
-          <div className="p-5 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 shadow-xs space-y-2.5 hover:-translate-y-0.5 transition-transform duration-200">
-            <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 flex items-center justify-center font-mono text-xs font-bold border border-blue-200 dark:border-blue-900">
-              02
-            </div>
-            <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100">
-              Layer 2: PubMed E-Utilities &amp; MeSH Matching
-            </h3>
-            <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
-              Real-time validation against the National Library of Medicine (NLM) database, indexing Retraction of Publication status tags, PMCID full texts, and MeSH notice linkages.
-            </p>
-          </div>
-
-          <div className="p-5 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 shadow-xs space-y-2.5 hover:-translate-y-0.5 transition-transform duration-200">
-            <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 flex items-center justify-center font-mono text-xs font-bold border border-amber-200 dark:border-amber-900">
-              03
-            </div>
-            <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100">
-              Layer 3: OpenAlex Multidisciplinary Knowledge Graph
-            </h3>
-            <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
-              Global citation mapping across 250M+ scientific publications, tracking the downstream citation transmission of invalidated research into systematic reviews and meta-analyses.
-            </p>
-          </div>
-
-          <div className="p-5 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 shadow-xs space-y-2.5 hover:-translate-y-0.5 transition-transform duration-200">
-            <div className="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 flex items-center justify-center font-mono text-xs font-bold border border-rose-200 dark:border-rose-900">
-              04
-            </div>
-            <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100">
-              Layer 4: COPE Corrigenda &amp; Quantitative Meta-Analysis Audit
-            </h3>
-            <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
-              Temporal analysis distinguishing pre- vs. post-retraction citations, with automated Committee on Publication Ethics (COPE) erratum and corrigendum notice generation.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Purpose-Built for Scholarly Citation Integrity (Audience Breakdown) */}
-      <section className="space-y-6 pt-4 border-t border-stone-200/80 dark:border-stone-800">
-        <div className="max-w-3xl">
-          <span className="text-xs font-bold uppercase tracking-wider text-stone-500">
-            Target Audience &amp; Use Cases
-          </span>
-          <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 dark:text-stone-100 mt-1">
-            Purpose-Built for Scholarly Citation Integrity
-          </h2>
-          <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 mt-1.5 leading-relaxed">
-            Tailored workflows engineered for authors, journal editors, and research institutions to eliminate retracted citation propagation across scientific literature.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-6 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/90 dark:border-stone-800 shadow-xs space-y-3 hover:-translate-y-0.5 transition-transform duration-200">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-700 dark:text-emerald-400">
-              <FileCheck className="w-5 h-5" />
-            </div>
-            <h3 className="text-base font-bold text-stone-900 dark:text-stone-100">
-              For Researchers &amp; Systematic Review Authors
-            </h3>
-            <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
-              Screen your manuscript bibliography before journal submission. Upload Word documents or PDFs to the Pre-Flight Scanner to guarantee that no referenced clinical trials or observational studies have been recalled, preventing peer-review rejections and post-acceptance retractions.
-            </p>
-          </div>
-
-          <div className="p-6 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/90 dark:border-stone-800 shadow-xs space-y-3 hover:-translate-y-0.5 transition-transform duration-200">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 flex items-center justify-center text-blue-700 dark:text-blue-400">
-              <BookOpen className="w-5 h-5" />
-            </div>
-            <h3 className="text-base font-bold text-stone-900 dark:text-stone-100">
-              For Journal Editors &amp; Peer Reviewers
-            </h3>
-            <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
-              Audit submitted manuscripts and entire journal archives over custom year windows. Catch post-publication retractions cited in secondary review studies and generate pre-drafted COPE-compliant corrigenda notices directly for authors and production departments.
-            </p>
-          </div>
-
-          <div className="p-6 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/90 dark:border-stone-800 shadow-xs space-y-3 hover:-translate-y-0.5 transition-transform duration-200">
-            <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/60 flex items-center justify-center text-purple-700 dark:text-purple-400">
-              <Building2 className="w-5 h-5" />
-            </div>
-            <h3 className="text-base font-bold text-stone-900 dark:text-stone-100">
-              For Universities &amp; Research Integrity Offices
-            </h3>
-            <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
-              Safeguard institutional research credibility and ensure adherence to international clinical trial reporting standards. Export structured citation audit ledgers in CSV and JSON formats to support institutional research integrity assessments.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Frequently Asked Questions Section */}
-      <section className="space-y-6 pt-4 border-t border-stone-200/80 dark:border-stone-800">
-        <div className="max-w-3xl">
-          <span className="text-xs font-bold uppercase tracking-wider text-stone-500">
-            Scholarly Guidelines
-          </span>
-          <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 dark:text-stone-100 mt-1">
-            Frequently Asked Questions &amp; Academic Integrity Guidelines
-          </h2>
-          <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 mt-1.5 leading-relaxed">
-            Essential answers on post-retraction citation contamination, COPE guidelines, and automated manuscript screening.
-          </p>
-        </div>
-
-        <div className="space-y-3 max-w-4xl">
-          {FAQS.map((faq, idx) => {
-            const isOpen = openFaqIndex === idx;
-            return (
-              <div
-                key={faq.question}
-                className="rounded-2xl border border-stone-200/90 dark:border-stone-800 bg-white dark:bg-stone-900 shadow-2xs overflow-hidden transition-colors"
-              >
-                <button
-                  type="button"
-                  onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
-                  className="w-full flex items-center justify-between p-4 sm:p-5 text-left text-sm font-bold text-stone-900 dark:text-stone-100 hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors cursor-pointer"
-                >
-                  <span className="pr-4">{faq.question}</span>
-                  <ChevronDown
-                    className={`w-4 h-4 text-stone-500 shrink-0 transition-transform duration-200 ${
-                      isOpen ? 'rotate-180' : ''
-                    }`}
-                  />
-                </button>
-                {isOpen && (
-                  <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed border-t border-stone-100 dark:border-stone-800/80">
-                    <p>{faq.answer}</p>
+        {/* Minimalist Sliding Pages & Outside Sliding Bar */}
+        <div className="space-y-2">
+          {/* Viewport Container */}
+          <div className="relative overflow-hidden">
+            <div
+              className="flex transition-transform duration-500 ease-out"
+              style={{
+                transform: `translateX(-${capabilitySlide * 100}%)`,
+              }}
+            >
+              {/* Slide 1: Secondary Literature Heuristics */}
+              <div className="w-full shrink-0 px-0.5">
+                <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs p-4 sm:p-5 flex flex-col justify-between gap-4">
+                  {/* Section 1: Standalone Header Row */}
+                  <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/80">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
+                        <Layers className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                          Module 01
+                        </span>
+                        <span className="text-slate-300 dark:text-slate-700 text-xs">·</span>
+                        <span className="text-xs font-medium text-slate-800 dark:text-slate-200">
+                          Literature Heuristics
+                        </span>
+                      </div>
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                      <CheckCircle2 className="w-2.5 h-2.5 text-emerald-500" />
+                      PRISMA &amp; MeSH
+                    </span>
                   </div>
-                )}
+
+                  {/* Section 2: Standalone Content & Features */}
+                  <div className="space-y-2.5">
+                    <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white tracking-tight">
+                      Secondary Literature Heuristics
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-3xl">
+                      Multi-layer detection isolates systematic reviews, meta-analyses, and clinical guidelines using PubMed publication types, MeSH terms, and PRISMA linguistic indicators.
+                    </p>
+                    {/* Standalone feature chips */}
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-750">
+                        PubMed Types
+                      </span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-750">
+                        MeSH Descriptors
+                      </span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-750">
+                        PRISMA Checklist
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Section 3: Standalone Action Bar */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800/80">
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span>Target: Systematic Reviews &amp; Meta-Analyses</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={onStartAudit}
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 text-xs font-medium shadow-2xs transition-all cursor-pointer group"
+                    >
+                      <span>Launch Journal Audit</span>
+                      <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                    </button>
+                  </div>
+                </div>
               </div>
-            );
-          })}
+
+              {/* Slide 2: Multi-Registry Retraction Cross-Check */}
+              <div className="w-full shrink-0 px-0.5">
+                <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs p-4 sm:p-5 flex flex-col justify-between gap-4">
+                  {/* Section 1: Standalone Header Row */}
+                  <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/80">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200/50 dark:border-rose-900/40">
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                          Module 02
+                        </span>
+                        <span className="text-slate-300 dark:text-slate-700 text-xs">·</span>
+                        <span className="text-xs font-medium text-slate-800 dark:text-slate-200">
+                          Multi-Registry Cross-Check
+                        </span>
+                      </div>
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200/60 dark:border-rose-900/50">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                      Live Registry Sync
+                    </span>
+                  </div>
+
+                  {/* Section 2: Standalone Content & Features */}
+                  <div className="space-y-2.5">
+                    <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white tracking-tight">
+                      Multi-Registry Retraction Cross-Check
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-3xl">
+                      Automated cross-referencing against Crossref event streams, OpenAlex, and PubMed retraction notices, accurately distinguishing citations made before versus after the formal retraction date.
+                    </p>
+                    {/* Standalone feature chips */}
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-750">
+                        Crossref API
+                      </span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-750">
+                        PubMed Notices
+                      </span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-750">
+                        Temporal Analysis
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Section 3: Standalone Action Bar */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800/80">
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                      <span>Database: 140M+ DOI Reference Graph</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={onSingleArticle}
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 text-xs font-medium shadow-2xs transition-all cursor-pointer group"
+                    >
+                      <span>Inspect Single DOI</span>
+                      <Search className="w-3 h-3 group-hover:scale-105 transition-transform" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Slide 3: AI Data-Contribution Verification */}
+              <div className="w-full shrink-0 px-0.5">
+                <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs p-4 sm:p-5 flex flex-col justify-between gap-4">
+                  {/* Section 1: Standalone Header Row */}
+                  <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/80">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200/50 dark:border-amber-900/40">
+                        <Sparkles className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                          Module 03
+                        </span>
+                        <span className="text-slate-300 dark:text-slate-700 text-xs">·</span>
+                        <span className="text-xs font-medium text-slate-800 dark:text-slate-200">
+                          AI Synthesis Engine
+                        </span>
+                      </div>
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-900/50">
+                      <Sparkles className="w-2.5 h-2.5 text-amber-500" />
+                      Gemini 3.8 Flash
+                    </span>
+                  </div>
+
+                  {/* Section 2: Standalone Content & Features */}
+                  <div className="space-y-2.5">
+                    <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white tracking-tight">
+                      AI Data-Contribution Verification
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-3xl">
+                      AI parses full manuscript text to distinguish whether the retracted trial actively contributed numerical data to pooled effect sizes, or was simply cited as background literature in the discussion.
+                    </p>
+                    {/* Standalone feature chips */}
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-750">
+                        Forest Plot Extraction
+                      </span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-750">
+                        Pooled Effect Sizes
+                      </span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-750">
+                        Background Context Filter
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Section 3: Standalone Action Bar */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800/80">
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                      <span>Verification: Effect Size Data Contamination</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={onExploreFullText}
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 text-xs font-medium shadow-2xs transition-all cursor-pointer group"
+                    >
+                      <span>Explore Full-Text AI</span>
+                      <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Slide 4: COPE Editorial Recommendations */}
+              <div className="w-full shrink-0 px-0.5">
+                <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs p-4 sm:p-5 flex flex-col justify-between gap-4">
+                  {/* Section 1: Standalone Header Row */}
+                  <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/80">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40">
+                        <Award className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                          Module 04
+                        </span>
+                        <span className="text-slate-300 dark:text-slate-700 text-xs">·</span>
+                        <span className="text-xs font-medium text-slate-800 dark:text-slate-200">
+                          Editorial Governance
+                        </span>
+                      </div>
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/50">
+                      <Award className="w-2.5 h-2.5 text-emerald-600" />
+                      COPE Standard
+                    </span>
+                  </div>
+
+                  {/* Section 2: Standalone Content & Features */}
+                  <div className="space-y-2.5">
+                    <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white tracking-tight">
+                      COPE Editorial Recommendations
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-3xl">
+                      Actionable remediation workflows aligned with Committee on Publication Ethics (COPE) protocols: author sensitivity re-analysis, formal corrigenda, and errata notices.
+                    </p>
+                    {/* Standalone feature chips */}
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-750">
+                        Corrigenda &amp; Errata
+                      </span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-750">
+                        Sensitivity Re-Analysis
+                      </span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-750">
+                        Expressions of Concern
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Section 3: Standalone Action Bar */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800/80">
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span>Protocol: Committee on Publication Ethics Guidelines</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveModal('workflow')}
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 text-xs font-medium shadow-2xs transition-all cursor-pointer group"
+                    >
+                      <span>View COPE Guidelines</span>
+                      <ArrowUpRight className="w-3 h-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Slide 5: Pre-Flight Manuscript Scanner */}
+              <div className="w-full shrink-0 px-0.5">
+                <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs p-4 sm:p-5 flex flex-col justify-between gap-4">
+                  {/* Section 1: Standalone Header Row */}
+                  <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/80">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 border border-teal-200/50 dark:border-teal-800/40">
+                        <FileCheck className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                          Module 05
+                        </span>
+                        <span className="text-slate-300 dark:text-slate-700 text-xs">·</span>
+                        <span className="text-xs font-medium text-slate-800 dark:text-slate-200">
+                          Pre-Submission Screening
+                        </span>
+                      </div>
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-200/60 dark:border-teal-800/50">
+                      <FileCheck className="w-2.5 h-2.5 text-teal-600" />
+                      Multi-Format Ready
+                    </span>
+                  </div>
+
+                  {/* Section 2: Standalone Content & Features */}
+                  <div className="space-y-2.5">
+                    <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white tracking-tight">
+                      Pre-Submission Pre-Flight Scanner
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-3xl">
+                      Upload Word documents (.docx), PDFs, or raw reference lists before submission to audit bibliography health and generate a verifiable Citation Health Certificate.
+                    </p>
+                    {/* Standalone feature chips */}
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-750">
+                        .docx &amp; .pdf Parsing
+                      </span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-750">
+                        Citation Health Certificate
+                      </span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-750">
+                        Pre-Acceptance Check
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Section 3: Standalone Action Bar */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800/80">
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
+                      <span>Output: Verifiable Citation Health Certificate</span>
+                    </div>
+                    {onPreFlight ? (
+                      <button
+                        type="button"
+                        onClick={onPreFlight}
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium shadow-2xs transition-all cursor-pointer group"
+                      >
+                        <span>Pre-Flight Scanner</span>
+                        <FileCheck className="w-3 h-3 group-hover:rotate-6 transition-transform" />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={onStartAudit}
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 text-xs font-medium shadow-2xs transition-all cursor-pointer group"
+                      >
+                        <span>Open Scanner</span>
+                        <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Outside Minimalist Sliding Bar */}
+          <div className="flex items-center justify-between gap-3 pt-1 px-1">
+            {/* Left: Minimalist Segmented Sliding Bar */}
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[11px] text-slate-400 dark:text-slate-500 select-none">
+                0{capabilitySlide + 1}
+              </span>
+              <div className="flex items-center gap-1.5">
+                {[0, 1, 2, 3, 4].map((idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setCapabilitySlide(idx)}
+                    className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                      capabilitySlide === idx
+                        ? 'w-8 bg-slate-900 dark:bg-slate-100'
+                        : 'w-3 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600'
+                    }`}
+                    title={`Jump to module ${idx + 1}`}
+                    aria-label={`Jump to module ${idx + 1}`}
+                  />
+                ))}
+              </div>
+              <span className="font-mono text-[11px] text-slate-400 dark:text-slate-500 select-none">
+                05
+              </span>
+            </div>
+
+            {/* Right: Minimalist Navigation Chevrons */}
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setCapabilitySlide((prev) => (prev > 0 ? prev - 1 : 4))}
+                className="w-7 h-7 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95"
+                title="Previous module"
+                aria-label="Previous module"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setCapabilitySlide((prev) => (prev < 4 ? prev + 1 : 0))}
+                className="w-7 h-7 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95"
+                title="Next module"
+                aria-label="Next module"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
         </div>
       </section>
+
 
       {/* Meet the Developers Section */}
       <section id="meet-the-developers" className="space-y-8 pt-6 border-t border-slate-200/80 dark:border-slate-800">
@@ -743,6 +952,407 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
         </div>
       </section>
+
+      {/* Mini Sections Reference Dock at the bottom of the homepage */}
+      <section className="space-y-4 pt-6 border-t border-stone-200/80 dark:border-stone-800">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 text-xs font-semibold mb-1">
+              <Compass className="w-3.5 h-3.5 text-stone-500" />
+              <span>Reference &amp; Methodological Documentation</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-100">
+              Methodology, Workflows &amp; Guidelines
+            </h2>
+          </div>
+          <span className="text-xs text-stone-500 dark:text-stone-400 font-medium">
+            Click any mini section to open in a popup window
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Mini Section 1: Workflow */}
+          <button
+            type="button"
+            onClick={() => setActiveModal('workflow')}
+            className="p-5 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/90 dark:border-stone-800 hover:border-emerald-600/50 dark:hover:border-emerald-500/50 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-200 text-left cursor-pointer group flex flex-col justify-between"
+          >
+            <div>
+              <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                <Layers className="w-4 h-4" />
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500 block">
+                Workflow
+              </span>
+              <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100 mt-0.5 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
+                Three-Step Editorial Workflow
+              </h3>
+              <p className="text-xs text-stone-500 dark:text-stone-400 mt-1 line-clamp-2 leading-relaxed">
+                Journal query, AI citation context evaluation, and COPE report dossier generation.
+              </p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-stone-100 dark:border-stone-800/80 flex items-center justify-between text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+              <span>Open workflow</span>
+              <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            </div>
+          </button>
+
+          {/* Mini Section 2: Methodology */}
+          <button
+            type="button"
+            onClick={() => setActiveModal('methodology')}
+            className="p-5 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/90 dark:border-stone-800 hover:border-blue-600/50 dark:hover:border-blue-500/50 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-200 text-left cursor-pointer group flex flex-col justify-between"
+          >
+            <div>
+              <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                <Search className="w-4 h-4" />
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500 block">
+                Methodology
+              </span>
+              <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100 mt-0.5 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">
+                Four-Layer Verification Architecture
+              </h3>
+              <p className="text-xs text-stone-500 dark:text-stone-400 mt-1 line-clamp-2 leading-relaxed">
+                Crossref REST API, PubMed E-Utilities, OpenAlex Graph &amp; COPE protocols.
+              </p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-stone-100 dark:border-stone-800/80 flex items-center justify-between text-xs font-semibold text-blue-700 dark:text-blue-400">
+              <span>View 4 layers</span>
+              <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            </div>
+          </button>
+
+          {/* Mini Section 3: Audience */}
+          <button
+            type="button"
+            onClick={() => setActiveModal('audience')}
+            className="p-5 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/90 dark:border-stone-800 hover:border-purple-600/50 dark:hover:border-purple-500/50 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-200 text-left cursor-pointer group flex flex-col justify-between"
+          >
+            <div>
+              <div className="w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                <Users className="w-4 h-4" />
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500 block">
+                Audiences
+              </span>
+              <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100 mt-0.5 group-hover:text-purple-700 dark:group-hover:text-purple-400 transition-colors">
+                Scholarly Integrity by Audience
+              </h3>
+              <p className="text-xs text-stone-500 dark:text-stone-400 mt-1 line-clamp-2 leading-relaxed">
+                Tailored solutions for researchers, peer reviewers, journal editors &amp; universities.
+              </p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-stone-100 dark:border-stone-800/80 flex items-center justify-between text-xs font-semibold text-purple-700 dark:text-purple-400">
+              <span>Explore use cases</span>
+              <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            </div>
+          </button>
+
+          {/* Mini Section 4: FAQ */}
+          <button
+            type="button"
+            onClick={() => setActiveModal('faq')}
+            className="p-5 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/90 dark:border-stone-800 hover:border-amber-600/50 dark:hover:border-amber-500/50 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-200 text-left cursor-pointer group flex flex-col justify-between"
+          >
+            <div>
+              <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                <BookOpen className="w-4 h-4" />
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500 block">
+                Knowledge Base
+              </span>
+              <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100 mt-0.5 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
+                Frequently Asked Questions
+              </h3>
+              <p className="text-xs text-stone-500 dark:text-stone-400 mt-1 line-clamp-2 leading-relaxed">
+                Common inquiries regarding post-retraction contamination, file formats &amp; COPE.
+              </p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-stone-100 dark:border-stone-800/80 flex items-center justify-between text-xs font-semibold text-amber-700 dark:text-amber-400">
+              <span>Read 5 answers</span>
+              <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            </div>
+          </button>
+        </div>
+      </section>
+
+      {/* Interactive Modal Popup for Mini Sections */}
+      {activeModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-in fade-in duration-200"
+          onClick={() => setActiveModal(null)}
+        >
+          <div
+            className="relative w-full max-w-4xl bg-white dark:bg-stone-900 rounded-3xl border border-stone-200 dark:border-stone-800 shadow-2xl p-6 sm:p-8 max-h-[85vh] overflow-y-auto animate-in zoom-in-95 duration-200 my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-start justify-between gap-4 pb-4 border-b border-stone-200/80 dark:border-stone-800">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-stone-500 block">
+                  {activeModal === 'workflow' && 'Editorial Workflow'}
+                  {activeModal === 'methodology' && 'Empirical Architecture'}
+                  {activeModal === 'audience' && 'Target Audience & Use Cases'}
+                  {activeModal === 'faq' && 'Scholarly Guidelines & Knowledge Base'}
+                </span>
+                <h3 className="text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-100 mt-1">
+                  {activeModal === 'workflow' && 'Three Steps to Full Retraction Safeguarding'}
+                  {activeModal === 'methodology' && 'Four-Layer Retraction Detection Methodology'}
+                  {activeModal === 'audience' && 'Purpose-Built for Scholarly Citation Integrity'}
+                  {activeModal === 'faq' && 'Frequently Asked Questions & Academic Integrity Guidelines'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="p-2 rounded-xl text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors cursor-pointer shrink-0"
+                title="Close popup"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body Content */}
+            <div className="py-6 space-y-6">
+              {/* Part 1: Editorial Workflow */}
+              {activeModal === 'workflow' && (
+                <div className="space-y-6">
+                  <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
+                    RetractScan streamlines systematic review auditing into three automated, reproducible phases designed for journal editors, peer reviewers, and research integrity officers.
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <div className="p-5 rounded-2xl bg-stone-50 dark:bg-stone-850 border border-stone-200 dark:border-stone-800 space-y-2.5">
+                      <div className="w-8 h-8 rounded-full bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-bold text-xs flex items-center justify-center">
+                        1
+                      </div>
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                        Scan Journal or Review DOI
+                      </h4>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                        Query any peer-reviewed journal by title or ISSN over a custom year window, or enter a single review DOI to index all referenced bibliography DOIs.
+                      </p>
+                    </div>
+
+                    <div className="p-5 rounded-2xl bg-stone-50 dark:bg-stone-850 border border-stone-200 dark:border-stone-800 space-y-2.5">
+                      <div className="w-8 h-8 rounded-full bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-bold text-xs flex items-center justify-center">
+                        2
+                      </div>
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                        Ingest Manuscript &amp; Run AI Audit
+                      </h4>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                        Upload PDF, DOCX, or text files for reviews that cite retracted studies. Gemini analyzes exact citation sentences to distinguish background mentions from pooled quantitative effect sizes.
+                      </p>
+                    </div>
+
+                    <div className="p-5 rounded-2xl bg-stone-50 dark:bg-stone-850 border border-stone-200 dark:border-stone-800 space-y-2.5">
+                      <div className="w-8 h-8 rounded-full bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-bold text-xs flex items-center justify-center">
+                        3
+                      </div>
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                        Record Notes &amp; Export Dossier
+                      </h4>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                        Add user editorial assessments, assign COPE recommendations, and export formatted PDF Retraction Dossiers or CSV reports for editorial board action.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveModal(null);
+                        onStartAudit();
+                      }}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 text-xs font-semibold cursor-pointer hover:bg-stone-800 dark:hover:bg-white"
+                    >
+                      <span>Start Journal Retraction Audit</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                    {onPreFlight && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveModal(null);
+                          onPreFlight();
+                        }}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-stone-300 dark:border-stone-700 text-stone-800 dark:text-stone-200 text-xs font-semibold cursor-pointer hover:bg-stone-100 dark:hover:bg-stone-800"
+                      >
+                        <FileCheck className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Pre-Flight Manuscript Scanner</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Part 2: Detection Methodology */}
+              {activeModal === 'methodology' && (
+                <div className="space-y-6">
+                  <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
+                    RetractScan synthesizes four independent bibliographic registries and clinical retraction notice feeds in real time, capturing 100% of verified notices with zero false positives.
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-5 rounded-2xl bg-stone-50 dark:bg-stone-850 border border-stone-200/80 dark:border-stone-800 space-y-2">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-mono text-xs font-bold border border-emerald-200 dark:border-emerald-900">
+                        01
+                      </div>
+                      <h4 className="text-sm font-bold text-stone-900 dark:text-stone-100">
+                        Layer 1: Crossref REST API Retraction Index
+                      </h4>
+                      <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
+                        Continuous synchronization with publisher Crossmark update streams, parsing official retraction notices, expressions of concern, and author corrigenda directly from primary deposits.
+                      </p>
+                    </div>
+
+                    <div className="p-5 rounded-2xl bg-stone-50 dark:bg-stone-850 border border-stone-200/80 dark:border-stone-800 space-y-2">
+                      <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 flex items-center justify-center font-mono text-xs font-bold border border-blue-200 dark:border-blue-900">
+                        02
+                      </div>
+                      <h4 className="text-sm font-bold text-stone-900 dark:text-stone-100">
+                        Layer 2: PubMed E-Utilities &amp; MeSH Matching
+                      </h4>
+                      <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
+                        Real-time validation against the National Library of Medicine (NLM) database, indexing Retraction of Publication status tags, PMCID full texts, and MeSH notice linkages.
+                      </p>
+                    </div>
+
+                    <div className="p-5 rounded-2xl bg-stone-50 dark:bg-stone-850 border border-stone-200/80 dark:border-stone-800 space-y-2">
+                      <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 flex items-center justify-center font-mono text-xs font-bold border border-amber-200 dark:border-amber-900">
+                        03
+                      </div>
+                      <h4 className="text-sm font-bold text-stone-900 dark:text-stone-100">
+                        Layer 3: OpenAlex Multidisciplinary Knowledge Graph
+                      </h4>
+                      <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
+                        Global citation mapping across 250M+ scientific publications, tracking the downstream citation transmission of invalidated research into systematic reviews and meta-analyses.
+                      </p>
+                    </div>
+
+                    <div className="p-5 rounded-2xl bg-stone-50 dark:bg-stone-850 border border-stone-200/80 dark:border-stone-800 space-y-2">
+                      <div className="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 flex items-center justify-center font-mono text-xs font-bold border border-rose-200 dark:border-rose-900">
+                        04
+                      </div>
+                      <h4 className="text-sm font-bold text-stone-900 dark:text-stone-100">
+                        Layer 4: COPE Corrigenda &amp; Quantitative Meta-Analysis Audit
+                      </h4>
+                      <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
+                        Temporal analysis distinguishing pre- vs. post-retraction citations, with automated Committee on Publication Ethics (COPE) erratum and corrigendum notice generation.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Part 3: Purpose-Built by Audience */}
+              {activeModal === 'audience' && (
+                <div className="space-y-6">
+                  <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
+                    Tailored workflows engineered for authors, journal editors, and research institutions to eliminate retracted citation propagation across scientific literature.
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <div className="p-5 rounded-2xl bg-stone-50 dark:bg-stone-850 border border-stone-200/90 dark:border-stone-800 space-y-3">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-700 dark:text-emerald-400">
+                        <FileCheck className="w-5 h-5" />
+                      </div>
+                      <h4 className="text-sm font-bold text-stone-900 dark:text-stone-100">
+                        For Researchers &amp; Systematic Review Authors
+                      </h4>
+                      <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
+                        Screen your manuscript bibliography before journal submission. Upload Word documents or PDFs to the Pre-Flight Scanner to guarantee that no referenced clinical trials or observational studies have been recalled, preventing peer-review rejections and post-acceptance retractions.
+                      </p>
+                    </div>
+
+                    <div className="p-5 rounded-2xl bg-stone-50 dark:bg-stone-850 border border-stone-200/90 dark:border-stone-800 space-y-3">
+                      <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 flex items-center justify-center text-blue-700 dark:text-blue-400">
+                        <BookOpen className="w-5 h-5" />
+                      </div>
+                      <h4 className="text-sm font-bold text-stone-900 dark:text-stone-100">
+                        For Journal Editors &amp; Peer Reviewers
+                      </h4>
+                      <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
+                        Audit submitted manuscripts and entire journal archives over custom year windows. Catch post-publication retractions cited in secondary review studies and generate pre-drafted COPE-compliant corrigenda notices directly for authors and production departments.
+                      </p>
+                    </div>
+
+                    <div className="p-5 rounded-2xl bg-stone-50 dark:bg-stone-850 border border-stone-200/90 dark:border-stone-800 space-y-3">
+                      <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/60 flex items-center justify-center text-purple-700 dark:text-purple-400">
+                        <Building2 className="w-5 h-5" />
+                      </div>
+                      <h4 className="text-sm font-bold text-stone-900 dark:text-stone-100">
+                        For Universities &amp; Research Integrity Offices
+                      </h4>
+                      <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
+                        Safeguard institutional research credibility and ensure adherence to international clinical trial reporting standards. Export structured citation audit ledgers in CSV and JSON formats to support institutional research integrity assessments.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Part 4: Frequently Asked Questions */}
+              {activeModal === 'faq' && (
+                <div className="space-y-4">
+                  <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed mb-4">
+                    Essential answers on post-retraction citation contamination, COPE guidelines, and automated manuscript screening.
+                  </p>
+
+                  <div className="space-y-3">
+                    {FAQS.map((faq, idx) => {
+                      const isOpen = openFaqIndex === idx;
+                      return (
+                        <div
+                          key={faq.question}
+                          className="rounded-2xl border border-stone-200/90 dark:border-stone-800 bg-stone-50/70 dark:bg-stone-850 shadow-2xs overflow-hidden transition-colors"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
+                            className="w-full flex items-center justify-between p-4 sm:p-5 text-left text-sm font-bold text-stone-900 dark:text-stone-100 hover:bg-stone-100/60 dark:hover:bg-stone-800/50 transition-colors cursor-pointer"
+                          >
+                            <span className="pr-4">{faq.question}</span>
+                            <ChevronDown
+                              className={`w-4 h-4 text-stone-500 shrink-0 transition-transform duration-200 ${
+                                isOpen ? 'rotate-180' : ''
+                              }`}
+                            />
+                          </button>
+                          {isOpen && (
+                            <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed border-t border-stone-200/60 dark:border-stone-800/80">
+                              <p>{faq.answer}</p>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="pt-4 border-t border-stone-200/80 dark:border-stone-800 flex items-center justify-between">
+              <span className="text-xs text-stone-400 font-mono">
+                Press ESC or click outside to dismiss
+              </span>
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="px-4 py-2 rounded-xl bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 text-xs font-semibold hover:bg-stone-800 dark:hover:bg-white transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Bottom Launch Banner */}
       <section className="p-8 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 text-white flex flex-col sm:flex-row items-center justify-between gap-6 shadow-md">

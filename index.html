@@ -21,6 +21,19 @@
     <meta name="google-site-verification" content="google5bd1140f9295063b" />
     <meta name="google-site-verification" content="google5bd1140f9295063b.html" />
 
+    <!-- Synchronous Device Settings Theme Detection -->
+    <script>
+      (function() {
+        try {
+          if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
+
     <!-- Favicon & Touch Icon -->
     <link rel="icon" type="image/png" sizes="32x32" href="/assets/aistudio/Document_Search_Orbit_Icon_ea742aca.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/assets/aistudio/Document_Search_Orbit_Icon_ea742aca.png" />

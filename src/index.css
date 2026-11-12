@@ -134,7 +134,26 @@
   animation: pulseSoft 9s ease-in-out infinite;
 }
 
-/* Floating in place utilities */
+@keyframes scanLaser {
+  0% {
+    top: 0%;
+    opacity: 0.85;
+  }
+  50% {
+    top: 96%;
+    opacity: 0.85;
+  }
+  100% {
+    top: 0%;
+    opacity: 0.85;
+  }
+}
+
+.animate-scan-laser {
+  animation: scanLaser 4.5s ease-in-out infinite;
+  will-change: top, opacity;
+}
+
 .animate-float-in-place-1 {
   animation: floatInPlaceA 6.5s ease-in-out infinite;
   will-change: transform, box-shadow;
@@ -169,7 +188,154 @@
   .animate-float-in-place-2,
   .animate-float-in-place-3,
   .animate-float-in-place-4,
-  .animate-float-in-place-5 {
+  .animate-float-in-place-5,
+  .animate-scan-laser {
     animation: none !important;
   }
+
+  .pt-metal b {
+    animation: none !important;
+    translate: 50% 0 !important;
+    opacity: 0.65 !important;
+  }
+
+  .pt-uvq16-paper-tunnel .ly {
+    animation: none !important;
+    transition: none !important;
+  }
 }
+
+/* AIMRAN Library: Layered Paper Cut Tunnel Background Block */
+.pt-uvq16-paper-tunnel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--bg, #05060a);
+  container-type: size;
+  isolation: isolate;
+  background: radial-gradient(
+    circle at calc(50% + var(--mx, 0) * -20%) calc(50% + var(--my, 0) * -20%),
+    var(--c3, #5a564e),
+    color-mix(in srgb, var(--c2, #787364) 70%, #000) 40%
+  ) !important;
+}
+
+.pt-uvq16-paper-tunnel > .st,
+.pt-uvq16-paper-tunnel > .nz {
+  opacity: var(--o, 1);
+}
+
+.pt-uvq16-paper-tunnel .st {
+  position: absolute;
+  inset: 0;
+  scale: calc(0.8 + var(--d, 2) * 0.2);
+}
+
+.pt-uvq16-paper-tunnel .ly {
+  position: absolute;
+  left: -14%;
+  top: -14%;
+  width: 128%;
+  height: 128%;
+  fill: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--c1, #f4e1c1) calc(var(--i) * 12.5%), var(--c2, #787364)),
+    var(--bg, #05060a) 8%
+  );
+  filter: drop-shadow(0 calc(3px + var(--i) * 0.5px) calc(6px + var(--i) * 0.6px) rgba(0, 0, 0, 0.42));
+  translate: calc(var(--mx, 0) * var(--i) * -9px) calc(var(--my, 0) * var(--i) * -9px);
+  transition: translate 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: uvq16-pp-sw calc((16s + var(--i) * 2.5s) / var(--k, 3)) ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.pt-uvq16-paper-tunnel .nz {
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  opacity: 0.16;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+@keyframes uvq16-pp-sw {
+  from {
+    rotate: calc(var(--r) * -3deg);
+    scale: 1;
+  }
+  to {
+    rotate: calc(var(--r) * 3deg);
+    scale: 1.03;
+  }
+}
+
+/* AIMRAN Library: Brushed Metal Background Block */
+.pt-metal {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--bg, #05060a);
+  container-type: size;
+  isolation: isolate;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--c1, #9aa4b2) 55%, #16181c),
+    var(--c2, #d7dde5) 48%,
+    color-mix(in srgb, var(--c1, #9aa4b2) 70%, #16181c) 52%,
+    color-mix(in srgb, var(--c1, #9aa4b2) 40%, #0e0f12)
+  ) !important;
+}
+
+.pt-metal > i,
+.pt-metal > b {
+  opacity: var(--o, 1);
+  pointer-events: none;
+}
+
+.pt-metal i {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.07) 0 1px,
+      transparent 1px 3px,
+      rgba(0, 0, 0, 0.08) 3px 4px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.05) 0 1px,
+      transparent 1px 7px
+    );
+  background-size: 100% calc(4px * var(--d, 1)), 100% calc(7px * var(--d, 1));
+}
+
+.pt-metal b {
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: 0;
+  width: 45%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--c3, #8ec5ff) 20%, rgba(255, 255, 255, 0.6)),
+    transparent
+  );
+  transform: skewX(-20deg);
+  filter: blur(10px);
+  mix-blend-mode: overlay;
+  animation: pt-metal-s calc(5s / var(--k, 1)) ease-in-out infinite;
+}
+
+@keyframes pt-metal-s {
+  0% {
+    translate: -120% 0;
+  }
+  60%,
+  100% {
+    translate: 260% 0;
+  }
+}
+

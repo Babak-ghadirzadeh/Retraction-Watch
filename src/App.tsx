@@ -12,6 +12,7 @@ import { HomePage } from './components/HomePage';
 import { PreFlightScanner } from './components/PreFlightScanner';
 import { UserProfilePage } from './components/UserProfilePage';
 import { AcademicAtmosphere } from './components/AcademicAtmosphere';
+import { PaperTunnel } from './components/PaperTunnel';
 import {
   Journal,
   ReviewArticle,
@@ -32,6 +33,55 @@ export default function App() {
   const [pendingTab, setPendingTab] = useState<NavTabType>('journal');
   const [fullTextQueue, setFullTextQueue] = useState<AuditedArticleResult[]>([]);
   const [fullTextInitialIndex, setFullTextInitialIndex] = useState<number>(0);
+
+  // Dark mode dynamically follows the user's device/OS system setting
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return false;
+  });
+
+  // Layered paper cut tunnel background mode - defaults to academic atmosphere
+  const [isTunnelBg, setIsTunnelBg] = useState<boolean>(false);
+
+  // Synchronize dark/light mode with user's device/OS preference
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+
+    // Purge manual overrides so the app always respects the user's device settings
+    try {
+      localStorage.removeItem('retractscan_theme');
+      localStorage.removeItem('retractscan_bg_mode');
+    } catch {}
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+    const syncThemeWithDevice = (matches: boolean) => {
+      setIsDarkMode(matches);
+      if (matches) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    };
+
+    // Apply immediate device theme
+    syncThemeWithDevice(mediaQuery.matches);
+
+    // Dynamically react whenever user changes OS/device appearance (sunset/sunrise or system settings)
+    const handleDeviceThemeChange = (e: MediaQueryListEvent) => {
+      syncThemeWithDevice(e.matches);
+    };
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleDeviceThemeChange);
+      return () => mediaQuery.removeEventListener('change', handleDeviceThemeChange);
+    } else if ((mediaQuery as any).addListener) {
+      (mediaQuery as any).addListener(handleDeviceThemeChange);
+      return () => (mediaQuery as any).removeListener(handleDeviceThemeChange);
+    }
+  }, []);
 
   // Editor profile state with persistence
   const [editor, setEditor] = useState<EditorProfile>(() => {
@@ -384,9 +434,22 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] dark:bg-[#121316] text-stone-800 dark:text-stone-200 flex flex-col font-sans transition-colors relative selection:bg-stone-200 dark:selection:bg-stone-800">
-      {/* Calm Ambient Academic Atmosphere with Floating Manuscript Papers and Books */}
-      <AcademicAtmosphere />
+    <div
+      className={`min-h-screen ${
+        isTunnelBg
+          ? 'bg-transparent text-stone-900 dark:text-stone-100'
+          : 'bg-[#FAF9F6] dark:bg-[#121316] text-stone-800 dark:text-stone-200'
+      } flex flex-col font-sans transition-colors relative selection:bg-stone-200 dark:selection:bg-stone-800`}
+    >
+      {/* Background Layer: Either Layered Paper Cut Tunnel Block or Academic Atmosphere */}
+      {isTunnelBg ? (
+        <PaperTunnel
+          asBackground
+          className="fixed inset-0 pointer-events-none -z-10"
+        />
+      ) : (
+        <AcademicAtmosphere />
+      )}
 
       {/* Top Bar Navigation */}
       <Navbar

@@ -12,6 +12,10 @@ interface NavbarProps {
   onLogout?: () => void;
   auditCount: number;
   fullTextCount?: number;
+  isTunnelBg?: boolean;
+  onToggleTunnelBg?: () => void;
+  isDarkMode?: boolean;
+  onToggleDarkMode?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -22,38 +26,16 @@ export const Navbar: React.FC<NavbarProps> = ({
   auditCount,
   fullTextCount = 0,
   onLogout,
+  isTunnelBg = false,
+  onToggleTunnelBg,
+  isDarkMode = false,
+  onToggleDarkMode,
 }) => {
   return (
     <header className="sticky top-0 z-30 bg-[#FAF9F6]/95 dark:bg-[#121316]/95 backdrop-blur-md border-b border-stone-200/80 dark:border-stone-800/80 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-6">
-        {/* Zone 1: Brand wordmark with official RetractScan Logo */}
-        <div className="flex items-center gap-2.5 shrink-0">
-          <button
-            onClick={() => onTabChange('home')}
-            className="w-9 h-9 rounded-xl bg-white dark:bg-stone-900 border border-stone-200/90 dark:border-stone-800 p-0.5 shadow-xs flex items-center justify-center shrink-0 cursor-pointer hover:scale-105 active:scale-95 transition-transform"
-            title="RetractScan Home"
-          >
-            <img
-              src="/assets/aistudio/Document_Search_Orbit_Icon_ea742aca.png"
-              alt="RetractScan - AI Academic Retraction Checker and Citation Audit Platform"
-              className="w-full h-full object-contain rounded-lg"
-            />
-          </button>
-          <button
-            onClick={() => onTabChange('home')}
-            className="text-left cursor-pointer focus:outline-none group"
-          >
-            <span className="text-base font-bold tracking-tight text-stone-900 dark:text-stone-100 whitespace-nowrap block group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
-              RetractScan
-            </span>
-            <span className="text-[10.5px] text-stone-500 dark:text-stone-400 block whitespace-nowrap font-medium -mt-0.5">
-              Academic Citation Integrity Suite
-            </span>
-          </button>
-        </div>
-
-        {/* Zone 2: Navigation links */}
-        <nav className="hidden lg:flex items-center gap-4 text-xs font-medium text-stone-600 dark:text-stone-400 overflow-x-auto py-1">
+        {/* Navigation links */}
+        <nav className="flex items-center gap-2 sm:gap-4 text-xs font-medium text-stone-600 dark:text-stone-400 overflow-x-auto py-1">
           <button
             onClick={() => onTabChange('home')}
             className={`whitespace-nowrap transition-all duration-200 py-1 cursor-pointer border-b-2 flex items-center gap-1.5 hover:-translate-y-0.5 active:translate-y-0 ${
@@ -136,8 +118,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
         </nav>
 
-        {/* Zone 3: 1 Primary Action (Editor Account / Profile) */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* Zone 3: Actions (Editor Profile / Login) */}
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
           {editor.isLoggedIn ? (
             <>
               <button
